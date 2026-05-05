@@ -1,0 +1,21 @@
+// Shared build settings for all Amwali targets.
+//
+// Bundle IDs are split per target via the *_BUNDLE_ID variables; each target's
+// project setting should reference the matching one.
+
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+SWIFT_VERSION = 5.9
+
+DEVELOPMENT_TEAM = $(AMWALI_TEAM_ID)
+
+APP_BUNDLE_ID         = com.amwali.app
+KEYBOARD_BUNDLE_ID    = com.amwali.app.keyboard
+KIT_BUNDLE_ID         = com.amwali.shared
+
+APP_GROUP_ID          = group.com.amwali.shared
+KEYCHAIN_ACCESS_GROUP = $(AppIdentifierPrefix)com.amwali.shared
+
+API_BASE_URL_DEBUG    = http:/$()/localhost:3000
+API_BASE_URL_RELEASE  = https:/$()/api.amwali.com
+
+ENABLE_BITCODE = NO

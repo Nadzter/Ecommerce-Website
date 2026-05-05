@@ -1,0 +1,80 @@
+name: backend-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - 'pnpm-lock.yaml'
+      - 'tsconfig.base.json'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - 'pnpm-lock.yaml'
+      - 'tsconfig.base.json'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: amwali
+          POSTGRES_PASSWORD: amwali_dev
+          POSTGRES_DB: amwali_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U amwali"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://amwali:amwali_dev@localhost:5432/amwali_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-secret-32-characters-min-padding-padding
+      MOCK_WEBHOOK_SECRET: ci-mock-secret-padding-padding
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Enable citext + pgcrypto
+        run: |
+          PGPASSWORD=amwali_dev psql -h localhost -U amwali -d amwali_test \
+            -c 'CREATE EXTENSION IF NOT EXISTS citext;' \
+            -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;'
+
+      - run: pnpm --filter @amwali/backend run db:generate
+
+      - run: pnpm --filter @amwali/backend run typecheck
+      - run: pnpm --filter @amwali/backend run lint
+      - run: pnpm --filter @amwali/backend run test

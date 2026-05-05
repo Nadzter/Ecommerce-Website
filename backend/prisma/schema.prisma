@@ -1,0 +1,205 @@
+// Amwali — Prisma schema. Mirrors docs/plans/2026-05-03-initial-architecture.md §3.
+// All money is stored as BigInt amount_minor + ISO currency. Never floats.
+// All timestamps are timestamptz (Prisma DateTime maps to it on Postgres).
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [citext, pgcrypto]
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Identity & sessions
+// ────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id                 String    @id @db.Uuid
+  email              String    @unique @db.Citext
+  emailVerifiedAt    DateTime? @map("email_verified_at") @db.Timestamptz(3)
+  phoneE164          String?   @unique @map("phone_e164")
+  phoneVerifiedAt    DateTime? @map("phone_verified_at") @db.Timestamptz(3)
+  fullName           String?   @map("full_name")
+  country            String
+  kycStatus          String    @default("unverified") @map("kyc_status")
+  kycProvider        String?   @map("kyc_provider")
+  kycReference       String?   @map("kyc_reference")
+  kycDecidedAt       DateTime? @map("kyc_decided_at") @db.Timestamptz(3)
+  biometricEnabled   Boolean   @default(false) @map("biometric_enabled")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  sessions           Session[]
+  contacts           Contact[]
+  bankLinks          BankLink[]
+  transfers          Transfer[]
+  idempotencyKeys    IdempotencyKey[]
+
+  @@map("users")
+}
+
+model OtpCode {
+  id          String    @id @db.Uuid
+  email       String    @db.Citext
+  userId      String?   @map("user_id") @db.Uuid
+  codeHash    String    @map("code_hash")
+  purpose     String
+  attempts    Int       @default(0)
+  expiresAt   DateTime  @map("expires_at") @db.Timestamptz(3)
+  consumedAt  DateTime? @map("consumed_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([email, purpose])
+  @@map("otp_codes")
+}
+
+model Session {
+  id                  String    @id @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  refreshTokenHash    String    @unique @map("refresh_token_hash")
+  parentSessionId     String?   @map("parent_session_id") @db.Uuid
+  deviceId            String?   @map("device_id")
+  deviceName          String?   @map("device_name")
+  userAgent           String?   @map("user_agent")
+  ipAddress           String?   @map("ip_address") @db.Inet
+  expiresAt           DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt           DateTime? @map("revoked_at") @db.Timestamptz(3)
+  revokedReason       String?   @map("revoked_reason")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastUsedAt          DateTime  @default(now()) @map("last_used_at") @db.Timestamptz(3)
+
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent              Session?  @relation("SessionRotation", fields: [parentSessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  rotations           Session[] @relation("SessionRotation")
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Recipients & source accounts
+// ────────────────────────────────────────────────────────────────────────────
+
+model Contact {
+  id            String    @id @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  displayName   String    @map("display_name")
+  phoneE164     String    @map("phone_e164")
+  country       String
+  routing       Json
+  isFavorite    Boolean   @default(false) @map("is_favorite")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transfers     Transfer[]
+
+  @@index([userId, isFavorite, displayName])
+  @@map("contacts")
+}
+
+model BankLink {
+  id                  String    @id @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  provider            String
+  providerLinkRef     String    @map("provider_link_ref")
+  institutionId       String    @map("institution_id")
+  institutionName     String    @map("institution_name")
+  displayName         String?   @map("display_name")
+  accountLast4        String?   @map("account_last4")
+  currency            String
+  status              String
+  consentExpiresAt    DateTime? @map("consent_expires_at") @db.Timestamptz(3)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transfers           Transfer[]
+
+  @@unique([provider, providerLinkRef])
+  @@index([userId])
+  @@map("bank_links")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Money: transfers + append-only audit log
+// ────────────────────────────────────────────────────────────────────────────
+
+model Transfer {
+  id                  String    @id @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  bankLinkId          String    @map("bank_link_id") @db.Uuid
+  contactId           String    @map("contact_id") @db.Uuid
+  provider            String
+  providerPaymentId   String?   @map("provider_payment_id")
+  amountMinor         BigInt    @map("amount_minor")
+  currency            String
+  state               String    @default("pending")
+  failureCode         String?   @map("failure_code")
+  failureMessage      String?   @map("failure_message")
+  bankReference       String?   @map("bank_reference")
+  reference           String?
+  initiatedAt         DateTime  @default(now()) @map("initiated_at") @db.Timestamptz(3)
+  authorizedAt        DateTime? @map("authorized_at") @db.Timestamptz(3)
+  submittedAt         DateTime? @map("submitted_at") @db.Timestamptz(3)
+  completedAt         DateTime? @map("completed_at") @db.Timestamptz(3)
+  failedAt            DateTime? @map("failed_at") @db.Timestamptz(3)
+  reversedAt          DateTime? @map("reversed_at") @db.Timestamptz(3)
+
+  user                User       @relation(fields: [userId], references: [id])
+  bankLink            BankLink   @relation(fields: [bankLinkId], references: [id])
+  contact             Contact    @relation(fields: [contactId], references: [id])
+  events              TransferEvent[]
+
+  @@unique([provider, providerPaymentId])
+  @@index([userId, initiatedAt(sort: Desc)])
+  @@index([state, initiatedAt])
+  @@map("transfers")
+}
+
+/// Append-only audit log. The application role has INSERT-only on this table;
+/// see prisma/migrations/.../grants.sql.
+model TransferEvent {
+  id           BigInt   @id @default(autoincrement())
+  transferId   String   @map("transfer_id") @db.Uuid
+  fromState    String?  @map("from_state")
+  toState      String   @map("to_state")
+  reason       String?
+  actor        String
+  payload      Json?
+  occurredAt   DateTime @default(now()) @map("occurred_at") @db.Timestamptz(3)
+
+  transfer     Transfer @relation(fields: [transferId], references: [id])
+
+  @@index([transferId, occurredAt])
+  @@map("transfer_events")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Idempotency
+// ────────────────────────────────────────────────────────────────────────────
+
+model IdempotencyKey {
+  userId          String    @map("user_id") @db.Uuid
+  key             String
+  endpoint        String
+  requestHash     String    @map("request_hash")
+  status          String
+  responseStatus  Int?      @map("response_status")
+  responseBody    Json?     @map("response_body")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt       DateTime  @map("expires_at") @db.Timestamptz(3)
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}

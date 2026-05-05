@@ -1,0 +1,40 @@
+name: ios-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - 'shared/openapi/**'
+      - '.github/workflows/ios-ci.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'shared/openapi/**'
+      - '.github/workflows/ios-ci.yml'
+
+jobs:
+  build-and-test:
+    runs-on: macos-14
+    # Skip until the Xcode project is checked in. Remove this `if: false`
+    # block in the same PR that adds ios/Amwali.xcodeproj.
+    if: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: SwiftLint
+        run: |
+          brew install swiftlint
+          (cd ios && swiftlint --strict)
+
+      - name: Build & test AmwaliKit
+        run: |
+          xcodebuild \
+            -workspace ios/Amwali.xcworkspace \
+            -scheme AmwaliKit \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            test

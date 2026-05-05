@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.test.example
+
+# Test
+coverage/
+.nyc_output/
+
+# Editor
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# iOS / Xcode
+ios/build/
+ios/DerivedData/
+ios/**/xcuserdata/
+ios/**/*.xcuserstate
+ios/**/Package.resolved
+ios/Pods/
+ios/.swiftpm/
+
+# Prisma
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# Generated (note: shared/ts/src/generated and ios/AmwaliKit/API/Generated are
+# committed so a fresh checkout typechecks without running the generator. CI
+# regenerates and asserts no diff.)
+shared/ts/dist/
+docs/api/generated/
+
+# Misc
+.turbo/
+.cache/
+*.pid

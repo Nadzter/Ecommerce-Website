@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.{png,jpg,jpeg,gif,ico,pdf,zip} binary
+*.{xcodeproj,xcworkspace} -text -diff
+pnpm-lock.yaml -diff

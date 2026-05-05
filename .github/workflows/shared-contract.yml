@@ -1,0 +1,41 @@
+name: shared-contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'shared/**'
+      - '.github/workflows/shared-contract.yml'
+  pull_request:
+    paths:
+      - 'shared/**'
+      - '.github/workflows/shared-contract.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint OpenAPI
+        run: pnpm openapi:lint
+
+      - name: Regenerate TS types and check no diff
+        run: |
+          pnpm openapi:generate
+          if ! git diff --quiet -- shared/ts/src/generated; then
+            echo 'Generated TS types are stale. Run pnpm openapi:generate and commit.'
+            git --no-pager diff -- shared/ts/src/generated
+            exit 1
+          fi

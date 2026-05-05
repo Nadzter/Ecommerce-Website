@@ -1,0 +1,13 @@
+extends:
+  - recommended
+
+rules:
+  # We lint the OpenAPI for structural correctness; style nits are downgraded
+  # to warnings so they don't break CI.
+  operation-operationId: warn
+  operation-summary: warn
+  operation-4xx-response: warn
+  tag-description: warn
+  info-license: warn
+  no-server-example.com: warn
+  security-defined: warn

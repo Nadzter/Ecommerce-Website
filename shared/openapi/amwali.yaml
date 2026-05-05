@@ -1,0 +1,773 @@
+openapi: 3.0.3
+info:
+  title: Amwali API
+  version: 0.0.1
+  description: |
+    Amwali — Payment Initiation Service. iOS keyboard-driven bank-to-bank
+    transfers via open banking. Phase 1 ships against `MockPaymentProvider`.
+
+    Source of truth for both the backend (`@amwali/backend`) and the iOS
+    `AmwaliKit` framework. All money fields are minor units serialised as
+    strings to avoid JS Number precision loss.
+  contact:
+    name: Amwali Engineering
+servers:
+  - url: http://localhost:3000
+    description: Local development
+tags:
+  - name: auth
+  - name: users
+  - name: kyc
+  - name: bank-links
+  - name: contacts
+  - name: transfers
+  - name: webhooks
+  - name: health
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Liveness
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok] }
+                required: [status]
+
+  /health/ready:
+    get:
+      tags: [health]
+      summary: Readiness (DB + Redis)
+      responses:
+        '200':
+          description: Ready
+        '503':
+          description: Not ready
+
+  /v1/auth/signup:
+    post:
+      tags: [auth]
+      summary: Start email signup; sends OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, country]
+              properties:
+                email: { type: string, format: email }
+                country: { type: string, enum: [AE, GH] }
+      responses:
+        '202':
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [signup_id]
+                properties:
+                  signup_id: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /v1/auth/signup/verify:
+    post:
+      tags: [auth]
+      summary: Verify signup OTP and create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [signup_id, code]
+              properties:
+                signup_id: { type: string, format: uuid }
+                code: { type: string }
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResult' }
+
+  /v1/auth/login/request:
+    post:
+      tags: [auth]
+      summary: Send login OTP. Always 202 (no enumeration).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202': { description: OTP sent (or pretended to be) }
+
+  /v1/auth/login/verify:
+    post:
+      tags: [auth]
+      summary: Verify login OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string }
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResult' }
+
+  /v1/auth/refresh:
+    post:
+      tags: [auth]
+      summary: Rotate refresh token. Reuse triggers session revoke.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        '200':
+          description: Rotated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthTokens' }
+
+  /v1/auth/logout:
+    post:
+      tags: [auth]
+      summary: Revoke session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        '204': { description: Revoked }
+
+  /v1/me:
+    get:
+      tags: [users]
+      summary: Get current user
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+    patch:
+      tags: [users]
+      summary: Update profile
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name: { type: string }
+                phone_e164: { type: string }
+                biometric_enabled: { type: boolean }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+    delete:
+      tags: [users]
+      summary: Delete (soft) account
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Deleted }
+
+  /v1/me/phone/request:
+    post:
+      tags: [users]
+      summary: Request phone OTP
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone_e164]
+              properties:
+                phone_e164: { type: string }
+      responses:
+        '202': { description: OTP sent }
+
+  /v1/me/phone/verify:
+    post:
+      tags: [users]
+      summary: Verify phone OTP
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+      responses:
+        '200':
+          description: Verified
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+
+  /v1/me/kyc/start:
+    post:
+      tags: [kyc]
+      summary: Start mock KYC flow
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Mock KYC session
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [kyc_session_id, redirect_url]
+                properties:
+                  kyc_session_id: { type: string, format: uuid }
+                  redirect_url: { type: string, format: uri }
+
+  /v1/me/kyc/complete:
+    post:
+      tags: [kyc]
+      summary: Complete mock KYC (auto-approves)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kyc_session_id]
+              properties:
+                kyc_session_id: { type: string, format: uuid }
+      responses:
+        '200':
+          description: KYC approved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+
+  /v1/bank-links:
+    get:
+      tags: [bank-links]
+      summary: List bank links
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [bank_links]
+                properties:
+                  bank_links:
+                    type: array
+                    items: { $ref: '#/components/schemas/BankLink' }
+
+  /v1/bank-links/sessions:
+    post:
+      tags: [bank-links]
+      summary: Create a bank-linking session (returns auth URL)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [country]
+              properties:
+                country: { type: string, enum: [AE, GH] }
+      responses:
+        '200':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [session_id, authorization_url, expires_at]
+                properties:
+                  session_id: { type: string, format: uuid }
+                  authorization_url: { type: string, format: uri }
+                  expires_at: { type: string, format: date-time }
+
+  /v1/bank-links/sessions/{id}/complete:
+    post:
+      tags: [bank-links]
+      summary: Complete a bank-linking session via callback params
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [callback_params]
+              properties:
+                callback_params:
+                  type: object
+                  additionalProperties: { type: string }
+      responses:
+        '200':
+          description: Linked
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [bank_link]
+                properties:
+                  bank_link: { $ref: '#/components/schemas/BankLink' }
+
+  /v1/bank-links/{id}:
+    delete:
+      tags: [bank-links]
+      summary: Revoke a bank link
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: Revoked }
+
+  /v1/contacts:
+    get:
+      tags: [contacts]
+      summary: List contacts
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: q, schema: { type: string } }
+        - { in: query, name: favorite, schema: { type: boolean } }
+        - { in: query, name: cursor, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contacts]
+                properties:
+                  contacts:
+                    type: array
+                    items: { $ref: '#/components/schemas/Contact' }
+                  next_cursor: { type: string, nullable: true }
+    post:
+      tags: [contacts]
+      summary: Create a contact
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contact]
+                properties:
+                  contact: { $ref: '#/components/schemas/Contact' }
+
+  /v1/contacts/{id}:
+    get:
+      tags: [contacts]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contact]
+                properties:
+                  contact: { $ref: '#/components/schemas/Contact' }
+    patch:
+      tags: [contacts]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contact]
+                properties:
+                  contact: { $ref: '#/components/schemas/Contact' }
+    delete:
+      tags: [contacts]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Deleted }
+
+  /v1/transfers:
+    post:
+      tags: [transfers]
+      summary: Initiate a transfer (idempotent)
+      description: |
+        Requires `Idempotency-Key` header. If `amount_minor` ≥ SCA threshold for
+        the currency, response includes `authorization_url` that the iOS client
+        must open in `ASWebAuthenticationSession`.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransferInput' }
+      responses:
+        '201':
+          description: Initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [transfer]
+                properties:
+                  transfer: { $ref: '#/components/schemas/Transfer' }
+                  authorization_url:
+                    type: string
+                    format: uri
+                    description: Present when SCA is required.
+        '409':
+          description: Idempotency conflict
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    get:
+      tags: [transfers]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: state, schema: { type: string } }
+        - { in: query, name: cursor, schema: { type: string } }
+        - { in: query, name: from, schema: { type: string, format: date-time } }
+        - { in: query, name: to, schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [transfers]
+                properties:
+                  transfers:
+                    type: array
+                    items: { $ref: '#/components/schemas/Transfer' }
+                  next_cursor: { type: string, nullable: true }
+
+  /v1/transfers/{id}:
+    get:
+      tags: [transfers]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [transfer]
+                properties:
+                  transfer: { $ref: '#/components/schemas/Transfer' }
+
+  /v1/transfers/{id}/authorize/complete:
+    post:
+      tags: [transfers]
+      summary: Complete the SCA redirect callback
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [callback_params]
+              properties:
+                callback_params:
+                  type: object
+                  additionalProperties: { type: string }
+      responses:
+        '200':
+          description: Authorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [transfer]
+                properties:
+                  transfer: { $ref: '#/components/schemas/Transfer' }
+
+  /v1/transfers/{id}/cancel:
+    post:
+      tags: [transfers]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [transfer]
+                properties:
+                  transfer: { $ref: '#/components/schemas/Transfer' }
+
+  /v1/webhooks/mock:
+    post:
+      tags: [webhooks]
+      summary: Mock provider webhook (HMAC-SHA256 in X-Amwali-Signature)
+      requestBody:
+        required: true
+        content:
+          application/json: {}
+      responses:
+        '200': { description: Accepted }
+        '401': { description: Bad signature }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+
+    AuthTokens:
+      type: object
+      required: [access_token, refresh_token]
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+
+    AuthResult:
+      allOf:
+        - $ref: '#/components/schemas/AuthTokens'
+        - type: object
+          required: [user]
+          properties:
+            user: { $ref: '#/components/schemas/User' }
+
+    User:
+      type: object
+      required: [id, email, country, kyc_status, biometric_enabled, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        email_verified_at: { type: string, format: date-time, nullable: true }
+        phone_e164: { type: string, nullable: true }
+        phone_verified_at: { type: string, format: date-time, nullable: true }
+        full_name: { type: string, nullable: true }
+        country: { type: string, enum: [AE, GH] }
+        kyc_status:
+          type: string
+          enum: [unverified, pending, approved, rejected]
+        biometric_enabled: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    Routing:
+      oneOf:
+        - type: object
+          required: [type, iban]
+          properties:
+            type: { type: string, enum: [iban] }
+            iban: { type: string }
+        - type: object
+          required: [type, bank_code, account_number]
+          properties:
+            type: { type: string, enum: [bank_account] }
+            bank_code: { type: string }
+            account_number: { type: string }
+
+    Contact:
+      type: object
+      required: [id, display_name, phone_e164, country, routing, is_favorite, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        display_name: { type: string }
+        phone_e164: { type: string }
+        country: { type: string, enum: [AE, GH] }
+        routing: { $ref: '#/components/schemas/Routing' }
+        is_favorite: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    ContactInput:
+      type: object
+      required: [display_name, phone_e164, country, routing]
+      properties:
+        display_name: { type: string }
+        phone_e164: { type: string }
+        country: { type: string, enum: [AE, GH] }
+        routing: { $ref: '#/components/schemas/Routing' }
+        is_favorite: { type: boolean }
+
+    BankLink:
+      type: object
+      required: [id, provider, institution_id, institution_name, currency, status, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        provider: { type: string, enum: [mock, lean, flutterwave] }
+        institution_id: { type: string }
+        institution_name: { type: string }
+        display_name: { type: string, nullable: true }
+        account_last4: { type: string, nullable: true }
+        currency: { type: string }
+        status:
+          type: string
+          enum: [active, expired, revoked, error]
+        consent_expires_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    Transfer:
+      type: object
+      required:
+        - id
+        - bank_link_id
+        - contact
+        - amount_minor
+        - currency
+        - state
+        - initiated_at
+      properties:
+        id: { type: string, format: uuid }
+        bank_link_id: { type: string, format: uuid }
+        contact: { $ref: '#/components/schemas/ContactSummary' }
+        amount_minor:
+          type: string
+          description: Minor units as a string to avoid JS Number precision loss.
+        currency: { type: string }
+        state:
+          type: string
+          enum: [pending, authorized, submitted, completed, failed, reversed]
+        reference: { type: string, nullable: true }
+        failure_code: { type: string, nullable: true }
+        failure_message: { type: string, nullable: true }
+        initiated_at: { type: string, format: date-time }
+        authorized_at: { type: string, format: date-time, nullable: true }
+        submitted_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+
+    ContactSummary:
+      type: object
+      required: [id, display_name, phone_e164]
+      properties:
+        id: { type: string, format: uuid }
+        display_name: { type: string }
+        phone_e164: { type: string }
+
+    TransferInput:
+      type: object
+      required: [bank_link_id, contact_id, amount_minor, currency]
+      properties:
+        bank_link_id: { type: string, format: uuid }
+        contact_id: { type: string, format: uuid }
+        amount_minor:
+          type: string
+          description: Minor units as a string.
+        currency: { type: string, enum: [AED, GHS] }
+        reference: { type: string }

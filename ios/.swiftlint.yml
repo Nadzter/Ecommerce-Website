@@ -1,0 +1,34 @@
+included:
+  - Amwali
+  - AmwaliKeyboard
+  - AmwaliKit
+  - AmwaliKitTests
+  - AmwaliUITests
+
+excluded:
+  - "**/Generated"
+
+disabled_rules:
+  - todo
+  - line_length
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - first_where
+  - sorted_imports
+  - unused_import
+
+reporter: "xcode"
+
+force_cast: error
+force_try: error
+implicitly_unwrapped_optional:
+  severity: warning
+
+custom_rules:
+  no_print:
+    name: "No print()"
+    regex: '\\bprint\\s*\\('
+    message: "Use AmwaliLogger instead of print()."
+    severity: warning
