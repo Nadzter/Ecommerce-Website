@@ -56,15 +56,21 @@ The app is set up to deploy from the repo root using the workspace install. In
 Vercel:
 
 1. **New Project** → import `Nadzter/Ecommerce-Website`.
-2. **Root directory:** leave as `/` (workspace root).
-3. **Framework preset:** Next.js (auto-detected).
-4. **Build command:** *(leave default — `vercel.json` overrides it)*
-5. **Install command:** *(leave default)*
-6. **Output directory:** `apps/web-demo/.next`
-7. Deploy.
+2. On the configuration screen, click **Edit** next to "Root Directory" and
+   set it to **`apps/web-demo`**.
+3. Leave **Build & Development Settings** at their defaults (do NOT override
+   the Output Directory — Vercel auto-detects `.next` relative to the root
+   directory you set above; overriding it leads to doubled paths like
+   `apps/web-demo/apps/web-demo/.next`).
+4. Make sure **"Include files outside the Root Directory in the Build Step"**
+   is **enabled** (it usually is by default). This lets the build see the
+   workspace `pnpm-lock.yaml` and root `package.json`.
+5. Framework preset auto-detects as **Next.js**.
+6. Click **Deploy**.
 
-`vercel.json` pins the build to `pnpm --filter @amwali/web-demo run build` so
-the rest of the monorepo (backend, iOS) stays out of the Vercel build path.
+Builds run via Vercel's standard pnpm-monorepo flow: install at the workspace
+root, build inside `apps/web-demo`. `vercel.json` here only declares the
+framework and otherwise stays out of the way.
 
 ## File map
 
