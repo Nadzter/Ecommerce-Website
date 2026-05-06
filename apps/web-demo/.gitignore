@@ -1,0 +1,9 @@
+# Next.js
+.next/
+out/
+
+# Local env
+.env*.local
+
+# Vercel
+.vercel/
