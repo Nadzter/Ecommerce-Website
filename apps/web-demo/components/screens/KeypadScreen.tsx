@@ -9,11 +9,10 @@ import { useDemo } from '@/lib/demo-state';
 import { formatAed } from '@/lib/data';
 
 export function KeypadScreen() {
-  const { goTo, goBack, contacts, kbd, setKbd } = useDemo();
+  const { goTo, goBack, kbd, setKbd, recipient, draft } = useDemo();
   const [amountStr, setAmountStr] = useState(
     kbd.amountAed > 0 ? String(kbd.amountAed) : '',
   );
-  const recipient = kbd.recipientId ? contacts.find((c) => c.id === kbd.recipientId) : null;
 
   useEffect(() => {
     setKbd({ amountAed: Number(amountStr) || 0 });
@@ -24,87 +23,68 @@ export function KeypadScreen() {
       if (key === '⌫') return s.slice(0, -1);
       if (key === '.' && s.includes('.')) return s;
       if (key === '0' && s === '') return s;
-      // limit to 2 decimals
       if (s.includes('.') && s.split('.')[1]!.length >= 2 && key !== '⌫') return s;
       return s + key;
     });
   }
 
   const amount = Number(amountStr) || 0;
-  const ready = amount >= 1 && !!recipient;
+  const ready = amount >= 1;
 
   return (
     <ScreenContainer bg="bg-[#0E141A]">
-      {/* Mini chat preview at top */}
-      <div className="relative flex-1 flex flex-col">
-        <div className="flex items-center justify-between px-4 pt-12 pb-2 text-white/80">
-          <button onClick={goBack} className="text-[14px] flex items-center gap-1 text-white/60 hover:text-white">
-            <ChevronDown size={18} />
-            Hide
-          </button>
-          <span className="text-[12px] uppercase tracking-wider text-white/40">
-            Amwali keyboard
-          </span>
-          <span className="w-12" />
-        </div>
-
-        <div
-          className="flex-1 px-3 pb-3 overflow-hidden"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 20% 0%, rgba(255,255,255,0.04) 0, transparent 40%)',
-          }}
+      {/* Top: minimal context — who you're sending to (from the chat) */}
+      <div className="flex items-center justify-between px-4 pt-12 pb-2">
+        <button
+          onClick={goBack}
+          className="text-[14px] flex items-center gap-1 text-white/70 hover:text-white"
         >
-          <div className="text-center pt-4">
-            <p className="text-[11px] uppercase tracking-wider text-white/40">
-              You're sending
-            </p>
-            <motion.p
-              key={amountStr}
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              className="font-display text-[64px] leading-none tracking-tight text-white mt-1"
-            >
-              {amountStr === '' ? (
-                <span className="text-white/30">0</span>
-              ) : (
-                amountStr
-              )}
-              <span className="ml-2 text-[24px] text-white/50 align-baseline">AED</span>
-            </motion.p>
-          </div>
+          <ChevronDown size={18} />
+          Hide
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wider text-accent-400 font-semibold">
+            Amwali Fast Pay
+          </span>
+        </div>
+        <span className="w-12" />
+      </div>
 
-          {/* Recipient picker */}
-          <button
-            onClick={() => goTo('recipient-picker')}
-            className="mt-6 flex w-full items-center gap-3 rounded-2xl bg-white/5 backdrop-blur px-4 py-3 text-left hover:bg-white/10"
+      {/* Recipient pill — implicit from chat, no IBAN */}
+      <div className="px-4">
+        <div className="flex items-center justify-center gap-2 rounded-full bg-white/5 backdrop-blur px-3 py-2">
+          <Avatar emoji={recipient.emoji} color="rgba(255,255,255,0.18)" size={28} />
+          <span className="text-[13px] text-white/90">
+            Sending to <span className="font-semibold">{recipient.shortName}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Amount display */}
+      <div className="flex-1 flex items-center justify-center px-3">
+        <div className="text-center">
+          <p className="text-[11px] uppercase tracking-wider text-white/40">You're sending</p>
+          <motion.p
+            key={amountStr}
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            className="font-display text-[64px] leading-none tracking-tight text-white mt-2"
           >
-            {recipient ? (
-              <>
-                <Avatar emoji={recipient.emoji} color="rgba(255,255,255,0.15)" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-medium text-white truncate">
-                    To {recipient.name}
-                  </div>
-                  <div className="text-[12px] text-white/50 truncate">{recipient.phone}</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-dashed border-white/30 text-white/50">
-                  ?
-                </div>
-                <div className="flex-1 text-[14px] text-white/70">Choose recipient</div>
-              </>
-            )}
-            <ChevronDown size={16} className="text-white/40 -rotate-90" />
-          </button>
+            {amountStr === '' ? <span className="text-white/30">0</span> : amountStr}
+            <span className="ml-2 text-[24px] text-white/50 align-baseline">AED</span>
+          </motion.p>
+          <p className="mt-3 text-[11px] text-white/40">
+            From {draft.selectedBank?.shortName ?? 'your bank'} · No fee
+          </p>
         </div>
       </div>
 
       {/* Keyboard */}
       <div className="bg-[#0A1014] border-t border-white/5 px-2 pb-3 pt-2">
-        <div className="flex items-center justify-end px-2 pb-2">
+        <div className="flex items-center justify-between px-2 pb-2">
+          <span className="text-[11px] text-white/30">
+            🌐 To switch back, tap globe
+          </span>
           <button
             disabled={!ready}
             onClick={() => goTo('confirm')}
@@ -131,7 +111,7 @@ export function KeypadScreen() {
         </div>
 
         <p className="mt-2 text-center text-[10px] text-white/30">
-          Amwali · {recipient ? formatAed(amount) : 'pick a recipient'} · UAE
+          Amwali · {ready ? formatAed(amount) : 'enter an amount'} · UAE
         </p>
       </div>
     </ScreenContainer>

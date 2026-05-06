@@ -47,30 +47,34 @@ function Page() {
               inside <em className="not-italic text-accent-600">any chat.</em>
             </h1>
             <p className="mt-5 max-w-[480px] text-[16px] leading-relaxed text-ink-600">
-              Amwali is an iOS keyboard. Tap the keyboard icon in WhatsApp, iMessage or anywhere
-              else, pick a recipient, send. Money moves bank-to-bank — Amwali never holds your funds.
+              Amwali Fast Pay is an iOS keyboard. Open any chat, tap the globe on your keyboard,
+              switch to Amwali, type an amount — your bank sends a tap-to-receive link straight
+              into the conversation.
             </p>
 
             <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <Bullet icon={Zap} title="Instant" body="Bank-to-bank in seconds." />
-              <Bullet icon={ShieldCheck} title="Secure" body="Open banking + Face ID." />
-              <Bullet icon={Sparkles} title="Native" body="Works in every chat app." />
+              <Bullet icon={Zap} title="Native" body="System keyboard — works in every chat app." />
+              <Bullet icon={ShieldCheck} title="No fees" body="Bank-to-bank, Face ID confirmed." />
+              <Bullet icon={Sparkles} title="One link" body="Receiver claims with one tap." />
             </div>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <TryButton />
               <p className="text-[13px] text-ink-500">
-                No real money moves · UAE only · Built for screen-share demos.
+                No real money moves · UAE only · For screen-share demos.
               </p>
             </div>
 
             <div className="mt-10 rounded-2xl border border-ink-100 bg-white/60 backdrop-blur p-4 text-[13px] text-ink-600">
-              <p className="font-semibold text-ink-800">How to use this demo</p>
+              <p className="font-semibold text-ink-800">The demo flow</p>
               <ol className="mt-2 list-decimal list-inside space-y-1.5">
-                <li>Tap <em className="font-medium text-ink-800">Get started</em> on the phone.</li>
-                <li>Use email <span className="font-mono">sara@example.ae</span> and the OTP <span className="font-mono">482913</span>.</li>
-                <li>Pick any UAE bank — auto-approves.</li>
-                <li>From the home screen, tap <em className="font-medium text-ink-800">Try it</em> to enter a chat and use the keyboard.</li>
+                <li>Sign in with <span className="font-mono">sara@example.ae</span> and OTP <span className="font-mono">482913</span>, finish KYC, link a bank.</li>
+                <li>From the home screen tap <em className="font-medium text-ink-800">Try it</em> — opens a WhatsApp chat with Ahmed.</li>
+                <li>Tap the message box. The iOS keyboard pops up.</li>
+                <li>Tap the pulsing <em className="font-medium text-ink-800">🌐 globe key</em> to open the keyboard switcher.</li>
+                <li>Pick <em className="font-medium text-ink-800">Amwali Fast Pay</em>. The numeric keypad slides up.</li>
+                <li>Type an amount → confirm with Face ID. A payment link drops into the chat.</li>
+                <li>Tap <em className="font-medium text-ink-800">"See what Ahmed sees"</em> to switch to the receiver's view, claim the link, and watch the money land in his bank.</li>
               </ol>
             </div>
           </div>

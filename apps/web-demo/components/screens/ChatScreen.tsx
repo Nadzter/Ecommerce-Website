@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Phone, Video } from 'lucide-react';
 import { ScreenContainer } from '../PhoneFrame';
 import { useDemo } from '@/lib/demo-state';
+import { PaymentLinkCard, PerspectiveBanner } from './ReceiveFlow';
+import { formatAed } from '@/lib/data';
 
 interface ChatMessage {
   id: string;
   fromMe: boolean;
   text: string;
-  isAmwali?: boolean;
   ts: string;
 }
 
@@ -21,70 +22,48 @@ const SEED: ChatMessage[] = [
 ];
 
 export function ChatScreen() {
-  const { goBack, goTo, contacts, lastSentMessage, setLastSentMessage } = useDemo();
-  const ahmed = contacts.find((c) => c.name.includes('Ahmed')) ?? contacts[0]!;
-  const [messages, setMessages] = useState<ChatMessage[]>(SEED);
-  const [showHint, setShowHint] = useState(true);
+  const { goBack, goTo, recipient, paymentLinkAmount } = useDemo();
+  const [showAhmedSwitch, setShowAhmedSwitch] = useState(false);
 
   useEffect(() => {
-    if (!lastSentMessage) return;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `m_${Date.now()}`,
-        fromMe: true,
-        text: lastSentMessage,
-        isAmwali: true,
-        ts: 'just now',
-      },
-    ]);
-    setShowHint(false);
-    setLastSentMessage(null);
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `m_reply_${Date.now()}`,
-          fromMe: false,
-          text: 'Got it, mashallah 🙏',
-          ts: 'just now',
-        },
-      ]);
-    }, 2200);
-  }, [lastSentMessage, setLastSentMessage]);
+    if (paymentLinkAmount) {
+      const t = setTimeout(() => setShowAhmedSwitch(true), 800);
+      return () => clearTimeout(t);
+    }
+    setShowAhmedSwitch(false);
+    return undefined;
+  }, [paymentLinkAmount]);
 
   return (
     <ScreenContainer bg="bg-[#0E141A]">
-      {/* Chat header — WhatsApp-style */}
+      <PerspectiveBanner perspective="sender" />
+
+      {/* Chat header */}
       <div className="flex items-center gap-2 px-3 pt-12 pb-2 bg-[#1F2C34] text-white">
         <button onClick={goBack} className="p-1 -ml-1">
           <ChevronLeft size={22} />
         </button>
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-700 text-base">
-          {ahmed.emoji}
+          {recipient.emoji}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[15px] font-medium truncate">{ahmed.name.split(' ')[0]}</div>
+          <div className="text-[15px] font-medium truncate">{recipient.shortName}</div>
           <div className="text-[11px] text-white/60">online</div>
         </div>
-        <button className="p-2 text-white/80">
-          <Video size={18} />
-        </button>
-        <button className="p-2 text-white/80">
-          <Phone size={18} />
-        </button>
+        <button className="p-2 text-white/80"><Video size={18} /></button>
+        <button className="p-2 text-white/80"><Phone size={18} /></button>
       </div>
 
-      {/* Chat body */}
+      {/* Messages */}
       <div
         className="flex-1 overflow-y-auto px-3 py-3 space-y-1.5 scrollbar-none"
         style={{
           backgroundImage:
-            'radial-gradient(circle at 20% 0%, rgba(255,255,255,0.04) 0, transparent 40%), radial-gradient(circle at 80% 100%, rgba(255,255,255,0.03) 0, transparent 40%)',
+            'radial-gradient(circle at 20% 0%, rgba(255,255,255,0.04) 0, transparent 40%)',
         }}
       >
         <AnimatePresence>
-          {messages.map((m) => (
+          {SEED.map((m) => (
             <motion.div
               key={m.id}
               layout
@@ -95,27 +74,33 @@ export function ChatScreen() {
             >
               <div
                 className={`max-w-[80%] rounded-2xl px-3 py-1.5 text-[14px] leading-snug ${
-                  m.fromMe
-                    ? m.isAmwali
-                      ? 'bg-gradient-to-br from-accent-500 to-accent-600 text-white'
-                      : 'bg-emerald-700 text-white'
-                    : 'bg-[#1F2C34] text-white'
+                  m.fromMe ? 'bg-emerald-700 text-white' : 'bg-[#1F2C34] text-white'
                 }`}
               >
                 <div>{m.text}</div>
-                <div
-                  className={`mt-0.5 text-[10px] ${
-                    m.fromMe ? 'text-white/70' : 'text-white/50'
-                  } text-right`}
-                >
+                <div className={`mt-0.5 text-[10px] text-white/60 text-right`}>
                   {m.ts} {m.fromMe ? '✓✓' : ''}
                 </div>
               </div>
             </motion.div>
           ))}
+
+          {/* Sent payment-link card (sender perspective: outbound) */}
+          {paymentLinkAmount ? (
+            <motion.div
+              key="link"
+              layout
+              initial={{ opacity: 0, y: 8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="flex justify-end"
+            >
+              <PaymentLinkCard amount={paymentLinkAmount} senderName="You" />
+            </motion.div>
+          ) : null}
         </AnimatePresence>
 
-        {showHint ? (
+        {!paymentLinkAmount ? (
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -123,35 +108,40 @@ export function ChatScreen() {
             className="flex justify-center pt-3"
           >
             <div className="rounded-full bg-white/10 backdrop-blur px-3.5 py-1.5 text-[11px] text-white/70">
-              Tap the keyboard icon below to open Amwali
+              Tap the message box below to start typing
             </div>
           </motion.div>
         ) : null}
       </div>
 
-      {/* Input bar — pretends to be iOS keyboard input */}
+      {/* WhatsApp input bar — tap goes to iOS keyboard */}
       <button
-        onClick={() => goTo('keypad')}
+        onClick={() => goTo('ios-keyboard')}
         className="flex items-center gap-2 bg-[#1F2C34] px-3 py-2.5 border-t border-white/5 text-left"
       >
         <div className="flex h-9 flex-1 items-center rounded-full bg-[#2A3942] px-4 text-[14px] text-white/50">
           Message
         </div>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent-400 to-accent-600 text-white shadow-lg">
-          <AmwaliKbdGlyph />
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white">
+          ➤
         </div>
       </button>
-    </ScreenContainer>
-  );
-}
 
-function AmwaliKbdGlyph() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 3 L4 19 L8 19 L12 11 L16 19 L20 19 Z"
-        fill="white"
-      />
-    </svg>
+      {/* "Switch to Ahmed's view" CTA after send */}
+      <AnimatePresence>
+        {showAhmedSwitch ? (
+          <motion.button
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            onClick={() => goTo('receive-chat')}
+            className="absolute left-1/2 -translate-x-1/2 bottom-20 z-30 rounded-full bg-ink-900/95 backdrop-blur text-white text-[12px] font-semibold px-4 py-2.5 shadow-2xl border border-white/10 flex items-center gap-2"
+          >
+            <span>👀 See what {recipient.shortName} sees</span>
+            <span className="text-white/40">→</span>
+          </motion.button>
+        ) : null}
+      </AnimatePresence>
+    </ScreenContainer>
   );
 }

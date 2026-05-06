@@ -4,17 +4,15 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { Field } from '../ui/Field';
 import { ScreenContainer } from '../PhoneFrame';
 import { useDemo } from '@/lib/demo-state';
-import { formatAed, maskIban } from '@/lib/data';
+import { formatAed } from '@/lib/data';
+
+// ─── Confirm ───────────────────────────────────────────────────────────────
 
 export function ConfirmScreen() {
-  const { goBack, goTo, contacts, kbd, setKbd, draft } = useDemo();
-  const recipient = contacts.find((c) => c.id === kbd.recipientId);
+  const { goBack, goTo, kbd, setKbd, draft, recipient } = useDemo();
   const [reference, setReference] = useState(kbd.reference);
-
-  if (!recipient) return null;
 
   return (
     <ScreenContainer bg="bg-ink-900">
@@ -39,17 +37,17 @@ export function ConfirmScreen() {
           <Card className="mt-6 bg-white/[0.06] border-white/10 backdrop-blur p-0 overflow-hidden">
             <Row label="From" value={`${draft.selectedBank?.shortName ?? 'Bank'} · •••• 0142`} />
             <Divider />
-            <Row label="To IBAN" value={maskIban(recipient.iban)} mono />
-            <Divider />
-            <Row label="Phone" value={recipient.phone} />
+            <Row label="To" value={recipient.shortName} />
             <Divider />
             <Row label="Fee" value="No fee" emphasis="text-accent-300" />
             <Divider />
-            <Row label="Arrives" value="Within seconds" />
+            <Row label="Arrives" value="When recipient accepts" />
           </Card>
 
           <div className="mt-5">
-            <label className="text-[12px] uppercase tracking-wider text-white/50">Reference (optional)</label>
+            <label className="text-[12px] uppercase tracking-wider text-white/50">
+              Reference (optional)
+            </label>
             <input
               value={reference}
               onChange={(e) => setReference(e.target.value)}
@@ -60,10 +58,10 @@ export function ConfirmScreen() {
             />
           </div>
 
-          <p className="mt-5 text-center text-[12px] text-white/40 leading-relaxed">
-            By holding to confirm, you authorise {draft.selectedBank?.shortName ?? 'your bank'} to send
-            this transfer. Money moves directly bank-to-bank.
-          </p>
+          <div className="mt-5 rounded-xl bg-accent-500/10 border border-accent-500/20 px-3.5 py-3 text-[12px] text-accent-200 leading-relaxed">
+            We'll drop a tap-to-receive link into your chat with {recipient.shortName}. The transfer
+            executes when {recipient.shortName} accepts.
+          </div>
         </div>
 
         <div className="px-5 pb-8 pt-3">
@@ -87,22 +85,16 @@ export function ConfirmScreen() {
 function Row({
   label,
   value,
-  mono,
   emphasis,
 }: {
   label: string;
   value: string;
-  mono?: boolean;
   emphasis?: string;
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-3">
       <span className="text-[13px] text-white/60">{label}</span>
-      <span
-        className={`text-[14px] font-medium text-white ${mono ? 'font-mono text-[13px]' : ''} ${emphasis ?? ''}`}
-      >
-        {value}
-      </span>
+      <span className={`text-[14px] font-medium text-white ${emphasis ?? ''}`}>{value}</span>
     </div>
   );
 }
@@ -188,28 +180,23 @@ function FaceGlyph() {
 // ─── Sending ───────────────────────────────────────────────────────────────
 
 export function SendingScreen() {
-  const { goTo, contacts, kbd, recordTransfer, setLastSentMessage, resetKbd } = useDemo();
+  const { goTo, kbd, recipient, recordTransfer, setPaymentLinkAmount } = useDemo();
   const [step, setStep] = useState(0);
-  const recipient = contacts.find((c) => c.id === kbd.recipientId);
-  const steps = ['Authorising at your bank…', 'Sending to recipient bank…', 'Sent.'];
+  const steps = ['Authorising at your bank…', 'Generating payment link…', 'Sent to chat.'];
 
   useEffect(() => {
     const intervals = steps.map((_, i) =>
       setTimeout(() => setStep(i + 1), 700 * (i + 1)),
     );
     const finalize = setTimeout(() => {
-      if (recipient) {
-        recordTransfer({
-          contactId: recipient.id,
-          amountAed: kbd.amountAed,
-          reference: kbd.reference || 'Sent via keyboard',
-          state: 'completed',
-          initiatedAt: new Date(),
-        });
-        setLastSentMessage(
-          `✅ Sent ${formatAed(kbd.amountAed)} via Amwali` + (kbd.reference ? ` · ${kbd.reference}` : ''),
-        );
-      }
+      recordTransfer({
+        contactId: recipient.id,
+        amountAed: kbd.amountAed,
+        reference: kbd.reference || 'Sent via keyboard',
+        state: 'pending',
+        initiatedAt: new Date(),
+      });
+      setPaymentLinkAmount(kbd.amountAed);
       goTo('sent');
     }, 700 * (steps.length + 1));
     return () => {
@@ -225,10 +212,8 @@ export function SendingScreen() {
         <div className="relative">
           <div className="h-20 w-20 rounded-full border-4 border-white/10 border-t-accent-400 animate-spin" />
         </div>
-        <p className="mt-8 font-display text-[24px] text-white">
-          {formatAed(kbd.amountAed)}
-        </p>
-        <p className="mt-1 text-[13px] text-white/50">to {recipient?.name}</p>
+        <p className="mt-8 font-display text-[24px] text-white">{formatAed(kbd.amountAed)}</p>
+        <p className="mt-1 text-[13px] text-white/50">to {recipient.name}</p>
 
         <div className="mt-10 w-full max-w-[260px] space-y-3">
           {steps.map((label, i) => (
@@ -258,17 +243,13 @@ export function SendingScreen() {
   );
 }
 
-// ─── Sent ──────────────────────────────────────────────────────────────────
+// ─── Sent (sender's view) ──────────────────────────────────────────────────
 
 export function SentScreen() {
-  const { goTo, kbd, contacts, resetKbd } = useDemo();
-  const recipient = contacts.find((c) => c.id === kbd.recipientId);
+  const { goTo, kbd, recipient } = useDemo();
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      goTo('chat');
-      setTimeout(resetKbd, 200);
-    }, 1900);
+    const t = setTimeout(() => goTo('chat'), 1900);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -276,7 +257,6 @@ export function SentScreen() {
   return (
     <ScreenContainer bg="bg-ink-900">
       <div className="relative flex h-full flex-col items-center justify-center text-white overflow-hidden">
-        {/* Confetti pulse */}
         <Confetti />
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
@@ -292,17 +272,18 @@ export function SentScreen() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mt-7 font-display text-[36px] leading-none tracking-tight z-10"
+          className="mt-7 font-display text-[34px] leading-none tracking-tight z-10"
         >
-          {formatAed(kbd.amountAed)}
+          Link sent
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mt-1 text-[14px] text-white/60 z-10"
+          className="mt-2 text-[14px] text-white/60 z-10 text-center max-w-[240px]"
         >
-          sent to {recipient?.name}
+          {formatAed(kbd.amountAed)} payment link dropped in your chat with{' '}
+          {recipient.shortName}.
         </motion.p>
         <motion.p
           initial={{ opacity: 0 }}

@@ -4,6 +4,7 @@ import { createContext, useContext, useMemo, useState } from 'react';
 import { SEED_CONTACTS, SEED_TRANSFERS, type SeedContact, type SeedTransfer, type Bank } from './data';
 
 export type Screen =
+  // Onboarding
   | 'welcome'
   | 'email'
   | 'otp'
@@ -13,18 +14,29 @@ export type Screen =
   | 'bank-list'
   | 'bank-auth'
   | 'bank-success'
+  // Sender main app
   | 'home'
   | 'contacts'
   | 'add-contact'
   | 'history'
   | 'settings'
+  // Sender — chat keyboard flow
   | 'chat'
+  | 'ios-keyboard'
+  | 'kbd-switcher'
   | 'keypad'
-  | 'recipient-picker'
   | 'confirm'
   | 'face-id'
   | 'sending'
-  | 'sent';
+  | 'sent'
+  // Receiver flow (the person clicking the link)
+  | 'receive-chat'
+  | 'receive-link'
+  | 'receive-iban'
+  | 'receive-faceid'
+  | 'receive-success';
+
+export type Persona = 'sender' | 'receiver';
 
 export interface AppDraft {
   email: string;
@@ -34,8 +46,25 @@ export interface AppDraft {
 
 export interface KeyboardDraft {
   amountAed: number;
-  recipientId: string | null;
   reference: string;
+}
+
+/**
+ * The "fixed" recipient for the demo. Everywhere that used to need a
+ * RecipientPicker now reads from here. The recipient is *implicit* — you're
+ * already in their WhatsApp chat.
+ */
+export interface ChatRecipient {
+  id: string;
+  name: string;
+  shortName: string;
+  emoji: string;
+  phone: string;
+}
+
+export interface ReceiverDraft {
+  isReturning: boolean; // false = first time, must enter IBAN; true = saved
+  iban: string;
 }
 
 interface DemoState {
@@ -45,6 +74,10 @@ interface DemoState {
   goTo: (screen: Screen) => void;
   goBack: () => void;
   reset: () => void;
+
+  // persona — controls which "phone" we're showing
+  persona: Persona;
+  setPersona: (p: Persona) => void;
 
   // onboarding
   draft: AppDraft;
@@ -56,26 +89,41 @@ interface DemoState {
   transfers: SeedTransfer[];
   recordTransfer: (t: Omit<SeedTransfer, 'id'>) => void;
 
-  // keyboard flow
+  // chat / keyboard flow
+  recipient: ChatRecipient;
   kbd: KeyboardDraft;
   setKbd: (patch: Partial<KeyboardDraft>) => void;
   resetKbd: () => void;
 
-  // chat sim
-  lastSentMessage: string | null;
-  setLastSentMessage: (s: string | null) => void;
+  // payment-link state
+  paymentLinkAmount: number | null;
+  setPaymentLinkAmount: (n: number | null) => void;
+
+  // receiver onboarding
+  receiver: ReceiverDraft;
+  setReceiver: (patch: Partial<ReceiverDraft>) => void;
 }
+
+const DEFAULT_RECIPIENT: ChatRecipient = {
+  id: 'ahmed',
+  name: 'Ahmed Al Mansouri',
+  shortName: 'Ahmed',
+  emoji: '🧔🏽',
+  phone: '+971 50 123 4567',
+};
 
 const DemoContext = createContext<DemoState | null>(null);
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [screen, setScreen] = useState<Screen>('welcome');
   const [history, setHistory] = useState<Screen[]>([]);
+  const [persona, setPersona] = useState<Persona>('sender');
   const [draft, setDraftState] = useState<AppDraft>({ email: '', fullName: '', selectedBank: null });
   const [contacts, setContacts] = useState<SeedContact[]>(SEED_CONTACTS);
   const [transfers, setTransfers] = useState<SeedTransfer[]>(SEED_TRANSFERS);
-  const [kbd, setKbdState] = useState<KeyboardDraft>({ amountAed: 0, recipientId: null, reference: '' });
-  const [lastSentMessage, setLastSentMessage] = useState<string | null>(null);
+  const [kbd, setKbdState] = useState<KeyboardDraft>({ amountAed: 0, reference: '' });
+  const [paymentLinkAmount, setPaymentLinkAmount] = useState<number | null>(null);
+  const [receiver, setReceiverState] = useState<ReceiverDraft>({ isReturning: false, iban: '' });
 
   const value = useMemo<DemoState>(
     () => ({
@@ -96,10 +144,14 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       reset: () => {
         setScreen('welcome');
         setHistory([]);
+        setPersona('sender');
         setDraftState({ email: '', fullName: '', selectedBank: null });
-        setKbdState({ amountAed: 0, recipientId: null, reference: '' });
-        setLastSentMessage(null);
+        setKbdState({ amountAed: 0, reference: '' });
+        setPaymentLinkAmount(null);
+        setReceiverState({ isReturning: false, iban: '' });
       },
+      persona,
+      setPersona,
       draft,
       setDraft: (patch) => setDraftState((d) => ({ ...d, ...patch })),
       contacts,
@@ -111,13 +163,16 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           { ...t, id: `t${ts.length + 1}_${Date.now()}` },
           ...ts,
         ]),
+      recipient: DEFAULT_RECIPIENT,
       kbd,
       setKbd: (patch) => setKbdState((k) => ({ ...k, ...patch })),
-      resetKbd: () => setKbdState({ amountAed: 0, recipientId: null, reference: '' }),
-      lastSentMessage,
-      setLastSentMessage,
+      resetKbd: () => setKbdState({ amountAed: 0, reference: '' }),
+      paymentLinkAmount,
+      setPaymentLinkAmount,
+      receiver,
+      setReceiver: (patch) => setReceiverState((r) => ({ ...r, ...patch })),
     }),
-    [screen, history, draft, contacts, transfers, kbd, lastSentMessage],
+    [screen, history, persona, draft, contacts, transfers, kbd, paymentLinkAmount, receiver],
   );
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;

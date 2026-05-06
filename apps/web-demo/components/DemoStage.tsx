@@ -16,14 +16,22 @@ import {
   SettingsScreen,
 } from './screens/ContactsScreen';
 import { ChatScreen } from './screens/ChatScreen';
+import { IosKeyboardScreen } from './screens/IosKeyboardScreen';
+import { KbdSwitcherScreen } from './screens/KbdSwitcherScreen';
 import { KeypadScreen } from './screens/KeypadScreen';
-import { RecipientPickerScreen } from './screens/RecipientPickerScreen';
 import {
   ConfirmScreen,
   FaceIdScreen,
   SendingScreen,
   SentScreen,
 } from './screens/ConfirmFlow';
+import {
+  ReceiveChatScreen,
+  ReceiveLinkScreen,
+  ReceiveIbanScreen,
+  ReceiveFaceIdScreen,
+  ReceiveSuccessScreen,
+} from './screens/ReceiveFlow';
 
 export function DemoStage() {
   return (
@@ -49,12 +57,18 @@ const SCREEN_MAP: Record<Screen, React.ComponentType> = {
   history: HistoryScreen,
   settings: SettingsScreen,
   chat: ChatScreen,
+  'ios-keyboard': IosKeyboardScreen,
+  'kbd-switcher': KbdSwitcherScreen,
   keypad: KeypadScreen,
-  'recipient-picker': RecipientPickerScreen,
   confirm: ConfirmScreen,
   'face-id': FaceIdScreen,
   sending: SendingScreen,
   sent: SentScreen,
+  'receive-chat': ReceiveChatScreen,
+  'receive-link': ReceiveLinkScreen,
+  'receive-iban': ReceiveIbanScreen,
+  'receive-faceid': ReceiveFaceIdScreen,
+  'receive-success': ReceiveSuccessScreen,
 };
 
 function ScreenSwitcher() {
