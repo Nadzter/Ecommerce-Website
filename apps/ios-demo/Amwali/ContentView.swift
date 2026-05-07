@@ -51,19 +51,19 @@ struct ContentView: View {
                         StepRow(
                             number: 1,
                             title: "Add the keyboard",
-                            body: "Settings → General → Keyboard → Keyboards → Add New Keyboard → Amwali."
+                            text: "Settings → General → Keyboard → Keyboards → Add New Keyboard → Amwali."
                         )
                         Divider().background(Color.white.opacity(0.08))
                         StepRow(
                             number: 2,
                             title: "Open WhatsApp",
-                            body: "Tap the message box of any chat. Tap 🌐 globe to switch to Amwali."
+                            text: "Tap the message box of any chat. Tap 🌐 globe to switch to Amwali."
                         )
                         Divider().background(Color.white.opacity(0.08))
                         StepRow(
                             number: 3,
                             title: "Type an amount",
-                            body: "Hit Send → a tap-to-receive link drops into the chat."
+                            text: "Hit Send → a tap-to-receive link drops into the chat."
                         )
                     }
                     .background(Color.white.opacity(0.06))
@@ -110,7 +110,7 @@ struct ContentView: View {
 private struct StepRow: View {
     let number: Int
     let title: String
-    let body: String
+    let text: String
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -125,7 +125,7 @@ private struct StepRow: View {
                 Text(title)
                     .font(.amwaliBody(15, weight: .semibold))
                     .foregroundStyle(.white)
-                Text(body)
+                Text(text)
                     .font(.amwaliBody(13))
                     .foregroundStyle(.white.opacity(0.7))
                     .lineSpacing(2)
