@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { SEED_CONTACTS, SEED_TRANSFERS, type SeedContact, type SeedTransfer, type Bank } from './data';
 
 export type Screen =
@@ -98,6 +98,8 @@ interface DemoState {
   // payment-link state
   paymentLinkAmount: number | null;
   setPaymentLinkAmount: (n: number | null) => void;
+  paymentLinkSender: string;
+  setPaymentLinkSender: (s: string) => void;
 
   // receiver onboarding
   receiver: ReceiverDraft;
@@ -123,7 +125,29 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [transfers, setTransfers] = useState<SeedTransfer[]>(SEED_TRANSFERS);
   const [kbd, setKbdState] = useState<KeyboardDraft>({ amountAed: 0, reference: '' });
   const [paymentLinkAmount, setPaymentLinkAmount] = useState<number | null>(null);
+  const [paymentLinkSender, setPaymentLinkSender] = useState<string>('Sara');
   const [receiver, setReceiverState] = useState<ReceiverDraft>({ isReturning: false, iban: '' });
+
+  // URL-driven entry: tapping the keyboard's payment link from a real
+  // WhatsApp chat lands here with `?receive=1&amt=100&from=Sara`. We jump
+  // straight into the receiver flow with the right amount preset.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const wantReceive =
+      params.get('receive') === '1' || params.get('receive') === 'true';
+    if (!wantReceive) return;
+    const amt = Number(params.get('amt'));
+    if (Number.isFinite(amt) && amt > 0) {
+      setPaymentLinkAmount(amt);
+    } else {
+      setPaymentLinkAmount(100); // sensible default if param missing
+    }
+    const fromName = params.get('from')?.trim();
+    if (fromName) setPaymentLinkSender(fromName);
+    setPersona('receiver');
+    setScreen('receive-link');
+  }, []);
 
   const value = useMemo<DemoState>(
     () => ({
@@ -148,6 +172,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         setDraftState({ email: '', fullName: '', selectedBank: null });
         setKbdState({ amountAed: 0, reference: '' });
         setPaymentLinkAmount(null);
+        setPaymentLinkSender('Sara');
         setReceiverState({ isReturning: false, iban: '' });
       },
       persona,
@@ -169,10 +194,12 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       resetKbd: () => setKbdState({ amountAed: 0, reference: '' }),
       paymentLinkAmount,
       setPaymentLinkAmount,
+      paymentLinkSender,
+      setPaymentLinkSender,
       receiver,
       setReceiver: (patch) => setReceiverState((r) => ({ ...r, ...patch })),
     }),
-    [screen, history, persona, draft, contacts, transfers, kbd, paymentLinkAmount, receiver],
+    [screen, history, persona, draft, contacts, transfers, kbd, paymentLinkAmount, paymentLinkSender, receiver],
   );
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;

@@ -21,7 +21,7 @@ const RECV_SEED = [
 ];
 
 export function ReceiveChatScreen() {
-  const { goTo, paymentLinkAmount } = useDemo();
+  const { goTo, paymentLinkAmount, paymentLinkSender } = useDemo();
 
   return (
     <ScreenContainer bg="bg-[#0E141A]">
@@ -36,7 +36,7 @@ export function ReceiveChatScreen() {
           👩🏽
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[15px] font-medium truncate">Sara</div>
+          <div className="text-[15px] font-medium truncate">{paymentLinkSender}</div>
           <div className="text-[11px] text-white/60">online</div>
         </div>
         <button className="p-2 text-white/80"><Video size={18} /></button>
@@ -76,7 +76,7 @@ export function ReceiveChatScreen() {
             >
               <PaymentLinkCard
                 amount={paymentLinkAmount}
-                senderName="Sara"
+                senderName={paymentLinkSender}
                 onClick={() => goTo('receive-link')}
               />
             </motion.div>
@@ -96,7 +96,7 @@ export function ReceiveChatScreen() {
 // ─── Receiver: link-landing screen ─────────────────────────────────────────
 
 export function ReceiveLinkScreen() {
-  const { goTo, paymentLinkAmount, receiver } = useDemo();
+  const { goTo, paymentLinkAmount, paymentLinkSender, receiver } = useDemo();
   const amount = paymentLinkAmount ?? 0;
 
   return (
@@ -119,7 +119,7 @@ export function ReceiveLinkScreen() {
           {formatAed(amount)}
         </h1>
         <p className="mt-2 text-[14px] text-ink-500">
-          from <span className="font-medium text-ink-800">Sara</span>
+          from <span className="font-medium text-ink-800">{paymentLinkSender}</span>
         </p>
 
         <Card className="mt-7 text-left p-4">
