@@ -1,0 +1,225 @@
+// FitStudio — multi-tenant SaaS schema.
+//
+// Every domain model carries an explicit `studioId` foreign key so that
+// row-level isolation is enforced by the database, not just the application
+// layer. Helpers in `lib/prisma.ts` wrap queries so the active tenant is
+// injected automatically.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  OWNER
+  STAFF
+  MEMBER
+}
+
+enum Language {
+  es
+  en
+  ar
+}
+
+enum Country {
+  ES
+  AE
+  LB
+}
+
+enum Currency {
+  EUR
+  AED
+  USD
+  LBP
+}
+
+enum MembershipType {
+  UNLIMITED
+  CLASS_PACK
+  DROP_IN
+}
+
+enum BillingInterval {
+  MONTHLY
+  ANNUAL
+  ONE_TIME
+}
+
+enum ClassLocation {
+  INPERSON
+  ONLINE
+  HYBRID
+}
+
+enum BookingStatus {
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model Studio {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  logoUrl          String?
+  primaryColor     String   @default("#0F172A")
+  timezone         String   @default("Europe/Madrid")
+  currency         Currency @default(EUR)
+  country          Country  @default(ES)
+  language         Language @default(es)
+  vatNumber        String?
+  verifactuEnabled Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  users       User[]
+  memberships Membership[]
+  classes     Class[]
+  bookings    Booking[]
+  payments    Payment[]
+  invoices    InvoiceRecord[]
+
+  @@index([slug])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String
+  firstName String?
+  lastName  String?
+  phone     String?
+  language  Language @default(en)
+  role      UserRole @default(MEMBER)
+  studioId  String
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  taughtClasses Class[]         @relation("Instructor")
+  bookings      Booking[]
+  payments      Payment[]
+  invoices      InvoiceRecord[]
+
+  @@unique([studioId, email])
+  @@index([studioId])
+  @@index([clerkId])
+}
+
+model Membership {
+  id              String          @id @default(cuid())
+  studioId        String
+  studio          Studio          @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  type            MembershipType
+  classCount      Int?
+  price           Decimal         @db.Decimal(10, 2)
+  currency        Currency
+  billingInterval BillingInterval
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+
+  payments Payment[]
+
+  @@index([studioId])
+}
+
+model Class {
+  id            String        @id @default(cuid())
+  studioId      String
+  studio        Studio        @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  instructorId  String
+  instructor    User          @relation("Instructor", fields: [instructorId], references: [id])
+  startTime     DateTime
+  endTime       DateTime
+  capacity      Int
+  location      ClassLocation @default(INPERSON)
+  zoomLink      String?
+  isRecurring   Boolean       @default(false)
+  recurringRule String?
+  createdAt     DateTime      @default(now())
+
+  bookings Booking[]
+
+  @@index([studioId, startTime])
+  @@index([instructorId])
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  studioId    String
+  studio      Studio        @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  classId     String
+  class       Class         @relation(fields: [classId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      BookingStatus @default(CONFIRMED)
+  creditsUsed Int           @default(1)
+  createdAt   DateTime      @default(now())
+
+  @@unique([classId, userId])
+  @@index([studioId])
+  @@index([userId])
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  studioId              String
+  studio                Studio        @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  userId                String
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount                Decimal       @db.Decimal(10, 2)
+  currency              Currency
+  status                PaymentStatus @default(PENDING)
+  stripePaymentIntentId String?       @unique
+  membershipId          String?
+  membership            Membership?   @relation(fields: [membershipId], references: [id])
+  description           String?
+  invoiceUrl            String?
+  createdAt             DateTime      @default(now())
+
+  @@index([studioId])
+  @@index([userId])
+}
+
+model InvoiceRecord {
+  id             String   @id @default(cuid())
+  studioId       String
+  studio         Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount         Decimal  @db.Decimal(10, 2)
+  currency       Currency
+  vatAmount      Decimal  @db.Decimal(10, 2)
+  vatRate        Decimal  @db.Decimal(5, 2)
+  verifactuHash  String?
+  invoiceNumber  String
+  issuedAt       DateTime @default(now())
+  pdfUrl         String?
+
+  @@unique([studioId, invoiceNumber])
+  @@index([studioId])
+}
