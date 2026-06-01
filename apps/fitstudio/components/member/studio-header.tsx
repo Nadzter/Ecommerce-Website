@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Dumbbell } from "lucide-react";
 import type { Studio } from "@prisma/client";
@@ -15,8 +16,8 @@ export function StudioHeader({ studio }: StudioHeaderProps): JSX.Element {
       className="border-b"
       style={{ backgroundColor: studio.primaryColor, color: "white" }}
     >
-      <div className="container flex h-20 items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="container flex h-20 flex-wrap items-center justify-between gap-3">
+        <Link href="/" className="flex items-center gap-3">
           {studio.logoUrl ? (
             <Image
               src={studio.logoUrl}
@@ -36,8 +37,22 @@ export function StudioHeader({ studio }: StudioHeaderProps): JSX.Element {
               {studio.slug}.fitstudio.app
             </p>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
+        </Link>
+        <nav className="flex items-center gap-3 text-sm">
+          <Link
+            href="/book"
+            className="rounded-md px-3 py-1.5 hover:bg-white/10"
+          >
+            Schedule
+          </Link>
+          <SignedIn>
+            <Link
+              href="/bookings"
+              className="rounded-md px-3 py-1.5 hover:bg-white/10"
+            >
+              My bookings
+            </Link>
+          </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
               <Button variant="secondary" size="sm">
@@ -48,7 +63,7 @@ export function StudioHeader({ studio }: StudioHeaderProps): JSX.Element {
           <SignedIn>
             <UserButton afterSignOutUrl="/" />
           </SignedIn>
-        </div>
+        </nav>
       </div>
     </header>
   );

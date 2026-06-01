@@ -2,6 +2,7 @@ import {
   CalendarDays,
   CreditCard,
   LayoutDashboard,
+  QrCode,
   Settings,
   Users,
   type LucideIcon,
@@ -36,6 +37,12 @@ export const dashboardNav: readonly NavItem[] = [
     href: "/dashboard/members",
     icon: Users,
     description: "Manage member accounts and memberships.",
+  },
+  {
+    label: "Check-in",
+    href: "/dashboard/checkin",
+    icon: QrCode,
+    description: "Scan QR codes to check members into a class.",
   },
   {
     label: "Payments",

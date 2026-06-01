@@ -72,35 +72,39 @@ async function loadMyBookings(
   });
   if (!user || user.studioId !== studioId) return null;
 
-  const [bookings, creditsUsedAgg, latestPack] = await Promise.all([
+  const now = new Date();
+  const [bookings, activeMemberships] = await Promise.all([
     prisma.booking.findMany({
       where: {
         userId: user.id,
         status: "CONFIRMED",
-        class: { startTime: { gte: new Date() } },
+        class: { startTime: { gte: now } },
       },
       include: { class: { select: { title: true, startTime: true } } },
       orderBy: { class: { startTime: "asc" } },
       take: 5,
     }),
-    prisma.booking.aggregate({
-      where: { userId: user.id, status: "CONFIRMED" },
-      _sum: { creditsUsed: true },
-    }),
-    prisma.payment.findFirst({
+    prisma.userMembership.findMany({
       where: {
         userId: user.id,
-        status: "COMPLETED",
-        membership: { type: "CLASS_PACK" },
+        studioId,
+        isActive: true,
+        startsAt: { lte: now },
+        OR: [{ endsAt: null }, { endsAt: { gte: now } }],
       },
-      orderBy: { createdAt: "desc" },
-      include: { membership: { select: { classCount: true } } },
+      include: { membership: { select: { type: true } } },
     }),
   ]);
 
-  const totalCredits = latestPack?.membership?.classCount ?? 0;
-  const used = creditsUsedAgg._sum.creditsUsed ?? 0;
-  const creditsRemaining = Math.max(totalCredits - used, 0);
+  const hasUnlimited = activeMemberships.some(
+    (entry) => entry.membership.type === "UNLIMITED",
+  );
+  const creditsRemaining = hasUnlimited
+    ? Number.POSITIVE_INFINITY
+    : activeMemberships.reduce(
+        (sum, entry) => sum + (entry.creditsRemaining ?? 0),
+        0,
+      );
 
   return {
     upcoming: bookings.map((b) => ({
@@ -174,7 +178,9 @@ export default async function MemberHomePage(): Promise<JSX.Element> {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-semibold tabular-nums">
-                {mine.creditsRemaining}
+                {Number.isFinite(mine.creditsRemaining)
+                  ? mine.creditsRemaining
+                  : "∞"}
               </p>
             </CardContent>
           </Card>

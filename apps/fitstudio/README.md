@@ -19,17 +19,26 @@ apps/fitstudio/
 ├── app/
 │   ├── (dashboard)/         Studio owner dashboard (auth + role-gated)
 │   │   ├── dashboard/       Overview metrics
-│   │   ├── classes/         Schedule view
+│   │   ├── classes/         Schedule + create dialog + detail page
+│   │   │   └── [classId]/   Bookings list, check-in, cancel
 │   │   ├── members/         Member roster
+│   │   ├── checkin/         QR scanner for staff check-ins
 │   │   ├── payments/        Billing (owners only)
 │   │   ├── settings/        Studio profile (owners only)
 │   │   └── layout.tsx       Sidebar shell + role check
 │   ├── (member)/            Public booking portal
 │   │   ├── layout.tsx       Branded header / footer
-│   │   └── page.tsx         Upcoming classes + member bookings
-│   ├── api/webhooks/clerk/  Clerk → Prisma user sync
+│   │   ├── page.tsx         Landing — upcoming classes + member bookings
+│   │   ├── book/            Weekly schedule + book / waitlist
+│   │   ├── bookings/        My bookings (upcoming / past) + QR codes
+│   │   └── memberships/     Plan catalogue
+│   ├── api/
+│   │   ├── classes/         POST/GET + [classId]/ GET/DELETE
+│   │   ├── bookings/        POST + [bookingId]/ DELETE + checkin
+│   │   ├── members/me/      bookings/ GET
+│   │   └── webhooks/clerk/  Clerk → Prisma user sync
 │   ├── sign-in/, sign-up/   Clerk catch-all pages
-│   ├── layout.tsx           Root layout with ClerkProvider
+│   ├── layout.tsx           Root layout with Clerk + React Query + Toaster
 │   ├── globals.css          Tailwind base + shadcn tokens
 │   └── not-found.tsx        Fallback for unknown tenants
 ├── components/
@@ -42,6 +51,14 @@ apps/fitstudio/
 │   ├── auth.ts              Role helpers (requireOwner / Staff / Member)
 │   ├── currency.ts          Locale-aware money formatting
 │   ├── nav.ts               Dashboard nav config
+│   ├── api.ts               JSON envelope + `withApi` wrapper
+│   ├── api-client.ts        Browser `fetchJson` helper
+│   ├── query-client.ts      React Query factory
+│   ├── zod.ts               Shared request schemas
+│   ├── booking.ts           Credit resolution + cancel/refund (server)
+│   ├── booking-rules.ts     Pure rules safe for client import
+│   ├── waitlist.ts          Promotion + queue helpers
+│   ├── recurring.ts         RRULE expansion (DAILY/WEEKLY/MONTHLY)
 │   └── utils.ts             `cn`, `slugify`, `formatDateTime`
 ├── prisma/
 │   ├── schema.prisma        Full multi-tenant schema

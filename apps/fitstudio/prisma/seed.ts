@@ -1,8 +1,11 @@
 import {
+  BillingInterval,
   BookingStatus,
   ClassLocation,
   Currency,
+  MembershipType,
   PrismaClient,
+  SessionType,
   UserRole,
 } from "@prisma/client";
 
@@ -11,7 +14,8 @@ const prisma = new PrismaClient();
 /**
  * Seed the database with two demo tenants so a fresh checkout has something
  * to render in the dashboard and the member portal. Re-running the script
- * upserts by stable keys (slug, clerkId, invoiceNumber) so it is idempotent.
+ * upserts by stable keys (slug, clerkId, deterministic ids) so it is
+ * idempotent.
  */
 async function main(): Promise<void> {
   const acme = await prisma.studio.upsert({
@@ -86,15 +90,71 @@ async function main(): Promise<void> {
     },
   });
 
+  // Membership templates the studio offers.
+  const tenPack = await prisma.membership.upsert({
+    where: { id: `seed-${acme.id}-pack` },
+    update: {},
+    create: {
+      id: `seed-${acme.id}-pack`,
+      studioId: acme.id,
+      name: "10-class pack",
+      description: "Use within 90 days.",
+      type: MembershipType.CLASS_PACK,
+      classCount: 10,
+      price: "120.00",
+      currency: Currency.EUR,
+      billingInterval: BillingInterval.ONE_TIME,
+    },
+  });
+
+  await prisma.membership.upsert({
+    where: { id: `seed-${acme.id}-unlimited` },
+    update: {},
+    create: {
+      id: `seed-${acme.id}-unlimited`,
+      studioId: acme.id,
+      name: "Unlimited monthly",
+      description: "All group classes, billed monthly.",
+      type: MembershipType.UNLIMITED,
+      price: "149.00",
+      currency: Currency.EUR,
+      billingInterval: BillingInterval.MONTHLY,
+    },
+  });
+
+  // Active 10-pack subscription for the seed member so booking works.
+  await prisma.userMembership.upsert({
+    where: { id: `seed-${acme.id}-${member.id}-um` },
+    update: { creditsRemaining: 8 },
+    create: {
+      id: `seed-${acme.id}-${member.id}-um`,
+      studioId: acme.id,
+      userId: member.id,
+      membershipId: tenPack.id,
+      creditsRemaining: 8,
+      isActive: true,
+    },
+  });
+
   // Schedule three classes starting in the next few days.
   const now = new Date();
-  const sessions = [
+  const sessions: Array<{
+    offsetHours: number;
+    title: string;
+    description: string;
+    capacity: number;
+    location: ClassLocation;
+    sessionType: SessionType;
+    equipment: string[];
+  }> = [
     {
       offsetHours: 24,
       title: "Reformer Pilates",
       description: "Slow-burn reformer flow for all levels.",
-      capacity: 12,
+      capacity: 6,
       location: ClassLocation.INPERSON,
+      sessionType: SessionType.GROUP,
+      equipment: ["Reformer 1", "Reformer 2", "Reformer 3"],
     },
     {
       offsetHours: 48,
@@ -102,27 +162,31 @@ async function main(): Promise<void> {
       description: "Energetic vinyasa with a focus on hips and shoulders.",
       capacity: 20,
       location: ClassLocation.HYBRID,
+      sessionType: SessionType.GROUP,
+      equipment: [],
     },
     {
       offsetHours: 72,
-      title: "Strength & Conditioning",
-      description: "Functional strength circuit with dumbbells.",
-      capacity: 16,
+      title: "Private Reformer",
+      description: "1:1 reformer coaching.",
+      capacity: 1,
       location: ClassLocation.INPERSON,
+      sessionType: SessionType.PRIVATE,
+      equipment: ["Reformer 1"],
     },
   ];
 
   for (const session of sessions) {
     const start = new Date(now.getTime() + session.offsetHours * 3_600_000);
     const end = new Date(start.getTime() + 55 * 60_000);
+    const id = `seed-${acme.id}-${session.title
+      .toLowerCase()
+      .replace(/\s+/g, "-")}`;
     await prisma.class.upsert({
-      where: {
-        // Composite uniqueness isn't declared, so emulate via title+start.
-        id: `seed-${acme.id}-${session.title.toLowerCase().replace(/\s+/g, "-")}`,
-      },
+      where: { id },
       update: { startTime: start, endTime: end },
       create: {
-        id: `seed-${acme.id}-${session.title.toLowerCase().replace(/\s+/g, "-")}`,
+        id,
         studioId: acme.id,
         title: session.title,
         description: session.description,
@@ -131,6 +195,8 @@ async function main(): Promise<void> {
         endTime: end,
         capacity: session.capacity,
         location: session.location,
+        sessionType: session.sessionType,
+        equipment: session.equipment,
       },
     });
   }
@@ -152,6 +218,7 @@ async function main(): Promise<void> {
         userId: member.id,
         status: BookingStatus.CONFIRMED,
         creditsUsed: 1,
+        membershipId: `seed-${acme.id}-${member.id}-um`,
       },
     });
   }
