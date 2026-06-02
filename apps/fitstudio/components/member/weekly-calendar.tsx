@@ -7,11 +7,11 @@ import {
   endOfDay,
   format,
   isSameDay,
-  startOfDay,
   startOfWeek,
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +31,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookButton } from "@/components/member/book-button";
 import { fetchJson } from "@/lib/api-client";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, initials } from "@/lib/utils";
 
 interface InstructorOption {
   id: string;
@@ -232,10 +232,20 @@ export function WeeklyCalendar({
                           {formatDateTime(session.startTime, studioTimezone)}
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-1 p-3 pt-1 text-xs">
-                        <p className="text-muted-foreground">
-                          {instructorName}
-                        </p>
+                      <CardContent className="space-y-2 p-3 pt-1 text-xs">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-[10px]">
+                              {initials(
+                                session.instructor.firstName,
+                                session.instructor.lastName,
+                              )}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-muted-foreground">
+                            {instructorName}
+                          </span>
+                        </div>
                         <p
                           className={
                             isFull

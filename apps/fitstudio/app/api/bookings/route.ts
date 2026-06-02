@@ -87,6 +87,7 @@ export async function POST(request: Request): Promise<Response> {
       // For waitlist entries we still record the membership but defer the
       // credit decrement until promotion. For confirmed bookings we decrement
       // immediately, except for unlimited memberships.
+      const membershipId = credit.membershipId;
       const created = await tx.booking.upsert({
         where: {
           classId_userId: { classId: session.id, userId: targetUserId },
@@ -95,8 +96,7 @@ export async function POST(request: Request): Promise<Response> {
           status: willWaitlist
             ? BookingStatus.WAITLISTED
             : BookingStatus.CONFIRMED,
-          membershipId:
-            credit.kind === "NONE" ? null : credit.membershipId,
+          membershipId,
           creditsUsed: 1,
           cancelledAt: null,
         },
@@ -107,8 +107,7 @@ export async function POST(request: Request): Promise<Response> {
           status: willWaitlist
             ? BookingStatus.WAITLISTED
             : BookingStatus.CONFIRMED,
-          membershipId:
-            credit.kind === "NONE" ? null : credit.membershipId,
+          membershipId,
           creditsUsed: 1,
         },
       });
@@ -142,11 +141,10 @@ export async function POST(request: Request): Promise<Response> {
           status: booking.status,
           creditsUsed: booking.creditsUsed,
           waitlistPosition,
-          membershipType: credit.kind === "UNLIMITED"
-            ? MembershipType.UNLIMITED
-            : credit.kind === "CREDIT"
-              ? MembershipType.CLASS_PACK
-              : null,
+          membershipType:
+            credit.kind === "UNLIMITED"
+              ? MembershipType.UNLIMITED
+              : MembershipType.CLASS_PACK,
         },
       },
       { status: 201 },

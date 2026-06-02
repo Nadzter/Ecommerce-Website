@@ -15,6 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClassBookingsList } from "@/components/dashboard/class-bookings-list";
 import { CancelClassButton } from "@/components/dashboard/cancel-class-button";
+import { BookMemberForm } from "@/components/dashboard/book-member-form";
 import { fetchJson } from "@/lib/api-client";
 
 interface ClassDetailResponse {
@@ -183,6 +184,14 @@ export default function ClassDetailPage(): JSX.Element {
           </CardContent>
         </Card>
       </div>
+
+      {session.sessionType !== "GROUP" && !session.cancelledAt ? (
+        <BookMemberForm
+          classId={session.id}
+          sessionType={session.sessionType}
+          seatsLeft={Math.max(session.capacity - confirmed.length, 0)}
+        />
+      ) : null}
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Bookings</h2>

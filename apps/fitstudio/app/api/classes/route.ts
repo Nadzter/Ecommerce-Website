@@ -21,27 +21,20 @@ export async function GET(request: Request): Promise<Response> {
       Object.fromEntries(url.searchParams.entries()),
     );
 
+    const startTimeFilter: Prisma.DateTimeFilter<"Class"> = {};
+    if (filters.from) startTimeFilter.gte = new Date(filters.from);
+    if (filters.to) startTimeFilter.lte = new Date(filters.to);
+
     const where: Prisma.ClassWhereInput = {
       studioId: studio.id,
+      ...(Object.keys(startTimeFilter).length > 0
+        ? { startTime: startTimeFilter }
+        : {}),
+      ...(filters.instructorId ? { instructorId: filters.instructorId } : {}),
+      ...(filters.sessionType ? { sessionType: filters.sessionType } : {}),
+      ...(filters.location ? { location: filters.location } : {}),
+      ...(filters.includeCancelled ? {} : { cancelledAt: null }),
     };
-    if (filters.from) {
-      where.startTime = { ...where.startTime, gte: new Date(filters.from) };
-    }
-    if (filters.to) {
-      where.startTime = { ...where.startTime, lte: new Date(filters.to) };
-    }
-    if (filters.instructorId) {
-      where.instructorId = filters.instructorId;
-    }
-    if (filters.sessionType) {
-      where.sessionType = filters.sessionType;
-    }
-    if (filters.location) {
-      where.location = filters.location;
-    }
-    if (!filters.includeCancelled) {
-      where.cancelledAt = null;
-    }
 
     const classes = await prisma.class.findMany({
       where,
@@ -105,12 +98,13 @@ export async function POST(request: Request): Promise<Response> {
 
     const seedStart = new Date(input.startTime);
     const seedEnd = new Date(input.endTime);
+    const equipment = input.equipment ?? [];
 
     // Equipment array, when set, caps the headline capacity so capacity is
     // never overstated relative to physical resources.
     const effectiveCapacity =
-      input.equipment.length > 0
-        ? Math.min(input.equipment.length, input.capacity)
+      equipment.length > 0
+        ? Math.min(equipment.length, input.capacity)
         : input.capacity;
 
     const occurrences = input.recurring
@@ -133,7 +127,7 @@ export async function POST(request: Request): Promise<Response> {
         capacity: effectiveCapacity,
         location: input.location,
         sessionType: input.sessionType,
-        equipment: input.equipment,
+        equipment,
         zoomLink: input.zoomLink ?? null,
         isRecurring: Boolean(input.recurring),
         recurringRule,

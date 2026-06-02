@@ -39,3 +39,18 @@ export function formatDateTime(
     timeStyle: "short",
   }).format(date);
 }
+
+/**
+ * Build 1-2 letter initials from optional first/last name fields, falling
+ * back to a literal "?" so an `AvatarFallback` always has something to
+ * render.
+ */
+export function initials(
+  firstName: string | null | undefined,
+  lastName: string | null | undefined,
+): string {
+  const first = firstName?.trim()[0] ?? "";
+  const last = lastName?.trim()[0] ?? "";
+  const combined = `${first}${last}`.toUpperCase();
+  return combined || "?";
+}
