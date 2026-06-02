@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/prisma/generated/client";
 import { randomUUID } from "node:crypto";
 
 import { ApiErrors, ok, parseBody, withApi } from "@/lib/api";

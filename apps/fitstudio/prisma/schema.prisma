@@ -6,7 +6,11 @@
 // injected automatically.
 
 generator client {
+  // Output to a per-app directory so the two Prisma schemas in this
+  // monorepo (apps/fitstudio + backend) never overwrite each other's
+  // generated client. Imports use the `@/prisma/generated/client` alias.
   provider = "prisma-client-js"
+  output   = "./generated/client"
 }
 
 datasource db {

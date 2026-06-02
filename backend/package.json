@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=20"
   },
+  "imports": {
+    "#prisma-client": "./prisma/generated/client/index.js"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",

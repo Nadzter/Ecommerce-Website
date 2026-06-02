@@ -1,7 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import type { User, UserRole } from "@prisma/client";
+import type { User, UserRole } from "@/prisma/generated/client";
 
 import { prisma } from "./prisma";
 import { getCurrentStudio } from "./tenant";

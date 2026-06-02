@@ -1,4 +1,4 @@
-import { BookingStatus } from "@prisma/client";
+import { BookingStatus } from "@/prisma/generated/client";
 
 import { ApiErrors, ok, withApi } from "@/lib/api";
 import { getAuthContext } from "@/lib/auth";

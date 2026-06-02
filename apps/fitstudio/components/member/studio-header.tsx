@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Dumbbell } from "lucide-react";
-import type { Studio } from "@prisma/client";
+import type { Studio } from "@/prisma/generated/client";
 
 import { Button } from "@/components/ui/button";
 

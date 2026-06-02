@@ -1,4 +1,4 @@
-import { BookingStatus, MembershipType, type Booking } from "@prisma/client";
+import { BookingStatus, MembershipType, type Booking } from "@/prisma/generated/client";
 
 import { prisma } from "./prisma";
 

@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { cache } from "react";
 import { notFound } from "next/navigation";
-import type { Studio } from "@prisma/client";
+import type { Studio } from "@/prisma/generated/client";
 
 import { prisma } from "./prisma";
 

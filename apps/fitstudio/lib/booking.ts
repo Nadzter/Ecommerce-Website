@@ -2,7 +2,7 @@ import {
   BookingStatus,
   MembershipType,
   type UserMembership,
-} from "@prisma/client";
+} from "@/prisma/generated/client";
 
 import { prisma } from "./prisma";
 

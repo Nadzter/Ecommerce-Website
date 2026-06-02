@@ -3,8 +3,12 @@
 // All timestamps are timestamptz (Prisma DateTime maps to it on Postgres).
 
 generator client {
+  // Output to a per-app directory so the two Prisma schemas in this
+  // monorepo (backend + apps/fitstudio) never overwrite each other's
+  // generated client.
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
+  output          = "./generated/client"
 }
 
 datasource db {

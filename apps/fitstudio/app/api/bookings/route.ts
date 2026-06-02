@@ -1,4 +1,4 @@
-import { BookingStatus, MembershipType } from "@prisma/client";
+import { BookingStatus, MembershipType } from "@/prisma/generated/client";
 
 import { ApiErrors, ok, parseBody, withApi } from "@/lib/api";
 import { getAuthContext } from "@/lib/auth";

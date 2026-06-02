@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
 import { Dumbbell } from "lucide-react";
-import type { Studio } from "@prisma/client";
+import type { Studio } from "@/prisma/generated/client";
 
 import { MobileSidebar } from "./mobile-sidebar";
 

@@ -7,7 +7,7 @@ import {
   PrismaClient,
   SessionType,
   UserRole,
-} from "@prisma/client";
+} from "@/prisma/generated/client";
 
 const prisma = new PrismaClient();
 

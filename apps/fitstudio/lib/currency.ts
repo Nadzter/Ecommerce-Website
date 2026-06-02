@@ -1,4 +1,4 @@
-import type { Currency } from "@prisma/client";
+import type { Currency } from "@/prisma/generated/client";
 
 const LOCALE_BY_CURRENCY: Record<Currency, string> = {
   EUR: "es-ES",
