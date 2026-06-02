@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   QrCode,
   Settings,
+  Tags,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -43,6 +44,12 @@ export const dashboardNav: readonly NavItem[] = [
     href: "/dashboard/checkin",
     icon: QrCode,
     description: "Scan QR codes to check members into a class.",
+  },
+  {
+    label: "Memberships",
+    href: "/dashboard/memberships",
+    icon: Tags,
+    description: "Pricing plans members can purchase.",
   },
   {
     label: "Payments",

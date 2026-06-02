@@ -73,7 +73,7 @@ async function loadMyBookings(
   if (!user || user.studioId !== studioId) return null;
 
   const now = new Date();
-  const [bookings, activeMemberships] = await Promise.all([
+  const [bookings, unlimited, userRow] = await Promise.all([
     prisma.booking.findMany({
       where: {
         userId: user.id,
@@ -84,27 +84,26 @@ async function loadMyBookings(
       orderBy: { class: { startTime: "asc" } },
       take: 5,
     }),
-    prisma.userMembership.findMany({
+    prisma.userMembership.findFirst({
       where: {
         userId: user.id,
         studioId,
         isActive: true,
         startsAt: { lte: now },
         OR: [{ endsAt: null }, { endsAt: { gte: now } }],
+        membership: { type: "UNLIMITED" },
       },
-      include: { membership: { select: { type: true } } },
+      select: { id: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { creditsBalance: true },
     }),
   ]);
 
-  const hasUnlimited = activeMemberships.some(
-    (entry) => entry.membership.type === "UNLIMITED",
-  );
-  const creditsRemaining = hasUnlimited
+  const creditsRemaining = unlimited
     ? Number.POSITIVE_INFINITY
-    : activeMemberships.reduce(
-        (sum, entry) => sum + (entry.creditsRemaining ?? 0),
-        0,
-      );
+    : userRow?.creditsBalance ?? 0;
 
   return {
     upcoming: bookings.map((b) => ({

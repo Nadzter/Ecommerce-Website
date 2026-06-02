@@ -1,5 +1,7 @@
-import { BookingStatus, MembershipType, type Booking } from "@/prisma/generated/client";
+import { BookingStatus, type Booking } from "@/prisma/generated/client";
 
+import { resolveCredit } from "./booking";
+import { deductCredit } from "./credits";
 import { prisma } from "./prisma";
 
 export interface WaitlistEntry {
@@ -10,14 +12,8 @@ export interface WaitlistEntry {
 }
 
 /**
- * Compute the next booking to promote from waitlist to confirmed for a
- * given class. The pure function takes the current waitlist (ordered or
- * unordered) and returns the head of the queue. Returns `null` when the
- * waitlist is empty.
- *
- * Pure / side-effect free: callers pass in the list and apply the
- * resulting state change themselves. This makes the function trivially
- * unit-testable without a database.
+ * Pure helper: pick the head of the waitlist queue from a list of
+ * bookings. Side-effect free so the logic is trivially unit-testable.
  */
 export function selectNextFromWaitlist<
   T extends Pick<Booking, "id" | "userId" | "createdAt" | "status">,
@@ -30,9 +26,8 @@ export function selectNextFromWaitlist<
 }
 
 /**
- * Same as {@link selectNextFromWaitlist} but returns the entire ordered
- * queue with a 1-indexed position attached. Used to surface "you are #N
- * on the waitlist" on the member portal.
+ * Pure helper: full ordered queue with 1-indexed positions, so the
+ * member portal can show "you're #N on the waitlist".
  */
 export function rankWaitlist<
   T extends Pick<Booking, "id" | "userId" | "createdAt" | "status">,
@@ -48,69 +43,60 @@ interface PromotionResult {
   promotedBookingId: string | null;
   classId: string;
   userId: string | null;
+  skipped: { userId: string; reason: "no_credit" }[];
 }
 
 /**
- * Atomically promote the next waitlisted booking for a class when a seat
- * frees up. Returns the booking that was promoted (or `null` when the
- * queue is empty).
+ * Walk the waitlist for a class and promote the first member whose credit
+ * source is still valid. Members whose pack ran out (or whose unlimited
+ * lapsed) are skipped so an unhealthy state never produces a booking they
+ * cannot cover.
  *
- * The transaction also writes `promotedAt` to capture when the seat was
- * granted. Notification fan-out (WhatsApp / email) is logged to the
- * console for now — Phase 4 will replace the log with a real provider.
+ * The phone/email notification for the promoted member is logged here;
+ * Phase 4 will replace the log with a real provider.
  */
 export async function promoteNextFromWaitlist(
   classId: string,
   studioId: string,
 ): Promise<PromotionResult> {
-  const promoted = await prisma.$transaction(async (tx) => {
-    const next = await tx.booking.findFirst({
-      where: {
-        classId,
-        studioId,
-        status: BookingStatus.WAITLISTED,
-      },
-      orderBy: { createdAt: "asc" },
-      include: { membership: { select: { id: true, type: true } } },
-    });
-    if (!next) return null;
-
-    const updated = await tx.booking.update({
-      where: { id: next.id },
-      data: {
-        status: BookingStatus.CONFIRMED,
-        promotedAt: new Date(),
-      },
-    });
-
-    // Mirror the credit accounting that the original booking would have
-    // performed if the seat had been available at create time.
-    if (
-      next.membershipId &&
-      next.membership?.type !== MembershipType.UNLIMITED
-    ) {
-      await tx.userMembership.update({
-        where: { id: next.membershipId },
-        data: { creditsRemaining: { decrement: next.creditsUsed } },
-      });
-    }
-
-    return updated;
+  const skipped: { userId: string; reason: "no_credit" }[] = [];
+  const queue = await prisma.booking.findMany({
+    where: { classId, studioId, status: BookingStatus.WAITLISTED },
+    orderBy: { createdAt: "asc" },
   });
 
-  if (!promoted) {
-    return { promotedBookingId: null, classId, userId: null };
+  for (const entry of queue) {
+    const credit = await resolveCredit(studioId, entry.userId);
+    if (credit.kind === "NONE") {
+      skipped.push({ userId: entry.userId, reason: "no_credit" });
+      continue;
+    }
+    const promoted = await prisma.$transaction(async (tx) => {
+      if (credit.kind === "CREDIT") {
+        await deductCredit(entry.userId, studioId);
+      }
+      return tx.booking.update({
+        where: { id: entry.id },
+        data: {
+          status: BookingStatus.CONFIRMED,
+          promotedAt: new Date(),
+          creditsUsed: credit.kind === "UNLIMITED" ? 0 : 1,
+        },
+      });
+    });
+    console.info("[waitlist] promoted", {
+      bookingId: promoted.id,
+      classId,
+      userId: promoted.userId,
+      skipped: skipped.length,
+    });
+    return {
+      promotedBookingId: promoted.id,
+      classId,
+      userId: promoted.userId,
+      skipped,
+    };
   }
 
-  console.info("[waitlist] promoted", {
-    bookingId: promoted.id,
-    classId,
-    userId: promoted.userId,
-  });
-
-  return {
-    promotedBookingId: promoted.id,
-    classId,
-    userId: promoted.userId,
-  };
+  return { promotedBookingId: null, classId, userId: null, skipped };
 }

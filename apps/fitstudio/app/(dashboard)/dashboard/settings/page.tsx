@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ChevronRight, CreditCard } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { requireOwner } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { getCurrentStudio } from "@/lib/tenant";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -33,6 +37,10 @@ function FieldRow({ label, value }: FieldRowProps): JSX.Element {
 export default async function SettingsPage(): Promise<JSX.Element> {
   await requireOwner();
   const studio = await getCurrentStudio();
+  const stripeStatus = await prisma.studio.findUnique({
+    where: { id: studio.id },
+    select: { stripeAccountId: true, stripeAccountStatus: true },
+  });
 
   return (
     <div className="space-y-6">
@@ -42,6 +50,41 @@ export default async function SettingsPage(): Promise<JSX.Element> {
           Studio profile, branding and tax configuration.
         </p>
       </div>
+
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <CreditCard className="h-4 w-4" aria-hidden />
+            </span>
+            <div>
+              <CardTitle className="text-base">Payments &amp; payouts</CardTitle>
+              <CardDescription>
+                Manage your Stripe Connect account and review payout status.
+              </CardDescription>
+            </div>
+          </div>
+          <Badge
+            variant={stripeStatus?.stripeAccountId ? "default" : "outline"}
+          >
+            {stripeStatus?.stripeAccountId
+              ? (stripeStatus.stripeAccountStatus ?? "connected")
+              : "not connected"}
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          <Button
+            asChild
+            size="sm"
+            className="cursor-pointer gap-2 transition-colors duration-200"
+          >
+            <Link href="/dashboard/settings/payments">
+              Open payments setup
+              <ChevronRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

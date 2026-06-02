@@ -1,8 +1,9 @@
-import { BookingStatus, MembershipType } from "@/prisma/generated/client";
+import { BookingStatus } from "@/prisma/generated/client";
 
 import { ApiErrors, ok, parseBody, withApi } from "@/lib/api";
 import { getAuthContext } from "@/lib/auth";
 import { resolveCredit } from "@/lib/booking";
+import { deductCredit } from "@/lib/credits";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudio } from "@/lib/tenant";
 import { createBookingSchema } from "@/lib/zod";
@@ -24,8 +25,6 @@ export async function POST(request: Request): Promise<Response> {
 
     const input = await parseBody(request, createBookingSchema);
 
-    // Resolve target user. Members can only book for themselves; staff/owners
-    // can book on behalf of any tenant member (needed for private sessions).
     let targetUserId = ctx.user.id;
     if (input.userId && input.userId !== ctx.user.id) {
       if (ctx.user.role === "MEMBER") {
@@ -59,8 +58,6 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    // Prevent duplicate bookings — schema has a unique constraint on
-    // (classId, userId) but we surface a friendlier error first.
     const existing = await prisma.booking.findUnique({
       where: {
         classId_userId: { classId: session.id, userId: targetUserId },
@@ -76,19 +73,20 @@ export async function POST(request: Request): Promise<Response> {
     if (credit.kind === "NONE") {
       throw ApiErrors.unprocessable(
         "No active membership or credits remaining",
-        { redirect: "/memberships" },
+        { redirect: "/membership" },
       );
     }
 
     const seatsLeft = session.capacity - session._count.bookings;
     const willWaitlist = seatsLeft <= 0;
 
+    // For confirmed bookings against a CREDIT source we deduct immediately
+    // inside the transaction so we never end up with a booking that the
+    // user "didn't really pay for". Waitlisted bookings defer the deduct
+    // to the promotion path.
+    const creditsUsed = credit.kind === "UNLIMITED" ? 0 : 1;
     const booking = await prisma.$transaction(async (tx) => {
-      // For waitlist entries we still record the membership but defer the
-      // credit decrement until promotion. For confirmed bookings we decrement
-      // immediately, except for unlimited memberships.
-      const membershipId = credit.membershipId;
-      const created = await tx.booking.upsert({
+      const upserted = await tx.booking.upsert({
         where: {
           classId_userId: { classId: session.id, userId: targetUserId },
         },
@@ -96,8 +94,7 @@ export async function POST(request: Request): Promise<Response> {
           status: willWaitlist
             ? BookingStatus.WAITLISTED
             : BookingStatus.CONFIRMED,
-          membershipId,
-          creditsUsed: 1,
+          creditsUsed: willWaitlist ? 0 : creditsUsed,
           cancelledAt: null,
         },
         create: {
@@ -107,18 +104,14 @@ export async function POST(request: Request): Promise<Response> {
           status: willWaitlist
             ? BookingStatus.WAITLISTED
             : BookingStatus.CONFIRMED,
-          membershipId,
-          creditsUsed: 1,
+          creditsUsed: willWaitlist ? 0 : creditsUsed,
         },
       });
 
       if (!willWaitlist && credit.kind === "CREDIT") {
-        await tx.userMembership.update({
-          where: { id: credit.membershipId },
-          data: { creditsRemaining: { decrement: 1 } },
-        });
+        await deductCredit(targetUserId, studio.id);
       }
-      return created;
+      return upserted;
     });
 
     let waitlistPosition: number | null = null;
@@ -141,10 +134,7 @@ export async function POST(request: Request): Promise<Response> {
           status: booking.status,
           creditsUsed: booking.creditsUsed,
           waitlistPosition,
-          membershipType:
-            credit.kind === "UNLIMITED"
-              ? MembershipType.UNLIMITED
-              : MembershipType.CLASS_PACK,
+          creditSource: credit.kind,
         },
       },
       { status: 201 },

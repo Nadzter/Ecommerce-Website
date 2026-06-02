@@ -90,19 +90,24 @@ enum PaymentStatus {
 // ---------------------------------------------------------------------------
 
 model Studio {
-  id               String   @id @default(cuid())
-  slug             String   @unique
-  name             String
-  logoUrl          String?
-  primaryColor     String   @default("#0F172A")
-  timezone         String   @default("Europe/Madrid")
-  currency         Currency @default(EUR)
-  country          Country  @default(ES)
-  language         Language @default(es)
-  vatNumber        String?
-  verifactuEnabled Boolean  @default(false)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  slug                 String   @unique
+  name                 String
+  logoUrl              String?
+  primaryColor         String   @default("#0F172A")
+  timezone             String   @default("Europe/Madrid")
+  currency             Currency @default(EUR)
+  country              Country  @default(ES)
+  language             Language @default(es)
+  vatNumber            String?
+  vatRate              Decimal  @default("21.00") @db.Decimal(5, 2)
+  verifactuEnabled     Boolean  @default(false)
+  stripeAccountId      String?  @unique
+  stripeAccountStatus  String?
+  address              String?
+  email                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   users           User[]
   memberships     Membership[]
@@ -111,22 +116,30 @@ model Studio {
   bookings        Booking[]
   payments        Payment[]
   invoices        InvoiceRecord[]
+  invoiceSequence StudioInvoiceSequence?
 
   @@index([slug])
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String
-  firstName String?
-  lastName  String?
-  phone     String?
-  language  Language @default(en)
-  role      UserRole @default(MEMBER)
-  studioId  String
-  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id                 String   @id @default(cuid())
+  clerkId            String   @unique
+  email              String
+  firstName          String?
+  lastName           String?
+  phone              String?
+  dni                String?
+  language           Language @default(en)
+  role               UserRole @default(MEMBER)
+  studioId           String
+  studio             Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  /// Aggregate credit balance available for booking. Incremented when a
+  /// CLASS_PACK payment succeeds, decremented when a class is booked.
+  /// Unlimited memberships bypass this counter (see UserMembership).
+  creditsBalance     Int      @default(0)
+  stripeCustomerId   String?
+  paymentFailedAt    DateTime?
+  createdAt          DateTime @default(now())
 
   taughtClasses Class[]          @relation("Instructor")
   bookings      Booking[]
@@ -240,14 +253,17 @@ model Payment {
   currency              Currency
   status                PaymentStatus @default(PENDING)
   stripePaymentIntentId String?       @unique
+  stripeSubscriptionId  String?
   membershipId          String?
   membership            Membership?   @relation(fields: [membershipId], references: [id])
   description           String?
   invoiceUrl            String?
+  invoice               InvoiceRecord?
   createdAt             DateTime      @default(now())
 
   @@index([studioId])
   @@index([userId])
+  @@index([stripeSubscriptionId])
 }
 
 model InvoiceRecord {
@@ -256,15 +272,30 @@ model InvoiceRecord {
   studio         Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
   userId         String
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentId      String?  @unique
+  payment        Payment? @relation(fields: [paymentId], references: [id])
   amount         Decimal  @db.Decimal(10, 2)
   currency       Currency
   vatAmount      Decimal  @db.Decimal(10, 2)
   vatRate        Decimal  @db.Decimal(5, 2)
-  verifactuHash  String?
+  verifactuHash  String?  @unique
   invoiceNumber  String
   issuedAt       DateTime @default(now())
   pdfUrl         String?
 
   @@unique([studioId, invoiceNumber])
   @@index([studioId])
+  @@index([verifactuHash])
+}
+
+/// Per-studio invoice-number counter. Sequence numbers reset annually so
+/// invoice numbers read `{YEAR}-{NNNN}`. Stored as a row we lock with a
+/// transaction-level update so two concurrent invoice generations never
+/// collide.
+model StudioInvoiceSequence {
+  studioId   String   @id
+  studio     Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  year       Int
+  lastNumber Int      @default(0)
+  updatedAt  DateTime @updatedAt
 }

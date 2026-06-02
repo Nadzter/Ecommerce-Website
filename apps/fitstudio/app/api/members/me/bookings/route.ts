@@ -51,7 +51,16 @@ export async function GET(request: Request): Promise<Response> {
       take: 100,
     });
 
-    const memberships = await listActiveMemberships(studio.id, ctx.user.id);
+    const [memberships, userRow] = await Promise.all([
+      listActiveMemberships(studio.id, ctx.user.id),
+      prisma.user.findUnique({
+        where: { id: ctx.user.id },
+        select: { creditsBalance: true },
+      }),
+    ]);
+    const hasUnlimited = memberships.some(
+      (entry) => entry.membership.type === "UNLIMITED",
+    );
 
     return ok({
       bookings: bookings.map((booking) => ({
@@ -76,9 +85,12 @@ export async function GET(request: Request): Promise<Response> {
         id: row.id,
         name: row.membership.name,
         type: row.membership.type,
-        creditsRemaining: row.creditsRemaining,
         endsAt: row.endsAt?.toISOString() ?? null,
       })),
+      credits: {
+        balance: userRow?.creditsBalance ?? 0,
+        hasUnlimited,
+      },
     });
   });
 }

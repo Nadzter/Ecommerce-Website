@@ -45,9 +45,12 @@ interface MyBookingsResponse {
     id: string;
     name: string;
     type: "UNLIMITED" | "CLASS_PACK" | "DROP_IN";
-    creditsRemaining: number | null;
     endsAt: string | null;
   }>;
+  credits: {
+    balance: number;
+    hasUnlimited: boolean;
+  };
 }
 
 interface MyBookingsListProps {
@@ -70,35 +73,51 @@ export function MyBookingsList({
 
   return (
     <div className="space-y-6">
-      {query.data?.memberships?.length ? (
+      {query.data ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          {query.data.memberships.map((entry) => (
-            <Card key={entry.id}>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Credits remaining</CardTitle>
+              <CardDescription>
+                Balance available for class bookings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm">
+              {query.data.credits.hasUnlimited ? (
+                <p className="text-2xl font-semibold">Unlimited</p>
+              ) : (
+                <p>
+                  <span className="text-3xl font-semibold tabular-nums">
+                    {query.data.credits.balance}
+                  </span>
+                  <span className="ml-2 text-muted-foreground">credits</span>
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          {query.data.memberships.length > 0 ? (
+            <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">{entry.name}</CardTitle>
-                <CardDescription>{entry.type}</CardDescription>
+                <CardTitle className="text-base">Active plans</CardTitle>
+                <CardDescription>
+                  Memberships currently linked to your account.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="text-sm">
-                {entry.type === "UNLIMITED" ? (
-                  <p className="font-medium">Unlimited access</p>
-                ) : (
-                  <p>
-                    <span className="text-2xl font-semibold">
-                      {entry.creditsRemaining ?? 0}
-                    </span>{" "}
-                    <span className="text-muted-foreground">
-                      credits remaining
+              <CardContent className="space-y-1 text-sm">
+                {query.data.memberships.map((entry) => (
+                  <div key={entry.id} className="flex justify-between gap-2">
+                    <span className="font-medium">{entry.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {entry.type}
+                      {entry.endsAt
+                        ? ` · until ${new Date(entry.endsAt).toLocaleDateString()}`
+                        : ""}
                     </span>
-                  </p>
-                )}
-                {entry.endsAt ? (
-                  <p className="text-xs text-muted-foreground">
-                    Expires {new Date(entry.endsAt).toLocaleDateString()}
-                  </p>
-                ) : null}
+                  </div>
+                ))}
               </CardContent>
             </Card>
-          ))}
+          ) : null}
         </div>
       ) : null}
 

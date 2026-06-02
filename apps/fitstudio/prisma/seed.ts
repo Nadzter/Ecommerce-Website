@@ -30,7 +30,10 @@ async function main(): Promise<void> {
       country: "ES",
       language: "es",
       vatNumber: "ESB12345678",
+      vatRate: "21.00",
       verifactuEnabled: true,
+      address: "Calle Velázquez 12, 28001 Madrid",
+      email: "hola@acme-pilates.test",
     },
   });
 
@@ -45,6 +48,9 @@ async function main(): Promise<void> {
       currency: Currency.AED,
       country: "AE",
       language: "en",
+      vatRate: "5.00",
+      address: "DIFC, Gate Avenue, Dubai",
+      email: "hi@dunes-yoga.test",
     },
   });
 
@@ -78,7 +84,7 @@ async function main(): Promise<void> {
 
   const member = await prisma.user.upsert({
     where: { clerkId: "seed_member_acme" },
-    update: {},
+    update: { creditsBalance: 8 },
     create: {
       clerkId: "seed_member_acme",
       email: "member@acme.test",
@@ -87,6 +93,8 @@ async function main(): Promise<void> {
       role: UserRole.MEMBER,
       language: "es",
       studioId: acme.id,
+      creditsBalance: 8,
+      dni: "12345678Z",
     },
   });
 
@@ -125,13 +133,13 @@ async function main(): Promise<void> {
   // Active 10-pack subscription for the seed member so booking works.
   await prisma.userMembership.upsert({
     where: { id: `seed-${acme.id}-${member.id}-um` },
-    update: { creditsRemaining: 8 },
+    update: {},
     create: {
       id: `seed-${acme.id}-${member.id}-um`,
       studioId: acme.id,
       userId: member.id,
       membershipId: tenPack.id,
-      creditsRemaining: 8,
+      creditsRemaining: null,
       isActive: true,
     },
   });
@@ -218,7 +226,6 @@ async function main(): Promise<void> {
         userId: member.id,
         status: BookingStatus.CONFIRMED,
         creditsUsed: 1,
-        membershipId: `seed-${acme.id}-${member.id}-um`,
       },
     });
   }

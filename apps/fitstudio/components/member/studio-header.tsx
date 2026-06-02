@@ -41,14 +41,20 @@ export function StudioHeader({ studio }: StudioHeaderProps): JSX.Element {
         <nav className="flex items-center gap-3 text-sm">
           <Link
             href="/book"
-            className="rounded-md px-3 py-1.5 hover:bg-white/10"
+            className="cursor-pointer rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-white/10"
           >
             Schedule
+          </Link>
+          <Link
+            href="/membership"
+            className="cursor-pointer rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-white/10"
+          >
+            Memberships
           </Link>
           <SignedIn>
             <Link
               href="/bookings"
-              className="rounded-md px-3 py-1.5 hover:bg-white/10"
+              className="cursor-pointer rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-white/10"
             >
               My bookings
             </Link>

@@ -58,7 +58,7 @@ export function BookButton({
         toast.error(error.body.message, {
           action: {
             label: "Buy membership",
-            onClick: () => router.push("/memberships"),
+            onClick: () => router.push("/membership"),
           },
         });
         return;
