@@ -60,3 +60,7 @@ docs/api/generated/
 .turbo/
 .cache/
 *.pid
+
+# Python cache (from .claude/skills/ui-ux-pro-max scripts)
+__pycache__/
+*.pyc
