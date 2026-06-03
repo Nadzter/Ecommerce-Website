@@ -6,6 +6,7 @@ import { getAnthropic } from "@/lib/chatbot/agent";
 import { getCurrentStudio } from "@/lib/tenant";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const MODEL = "claude-opus-4-8";
 const MAX_TOKENS = 1024;

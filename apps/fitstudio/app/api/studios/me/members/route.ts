@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStudio } from "@/lib/tenant";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const querySchema = z.object({
   role: z.enum(["OWNER", "STAFF", "MEMBER"]).optional(),

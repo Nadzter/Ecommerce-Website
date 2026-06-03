@@ -4,6 +4,7 @@ import { enqueueNotification } from "@/lib/notifications";
 import { getCurrentStudio } from "@/lib/tenant";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
  * Enqueue a sample `booking_confirmed` to the studio owner so they can

@@ -7,6 +7,7 @@ import { Language, UserRole } from "@/prisma/generated/client";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
  * Shape of the metadata we expect Clerk to forward on every user. Studio

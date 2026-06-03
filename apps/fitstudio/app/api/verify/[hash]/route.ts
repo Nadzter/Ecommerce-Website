@@ -2,6 +2,7 @@ import { ApiErrors, ok, withApi } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 interface RouteContext {
   params: { hash: string };

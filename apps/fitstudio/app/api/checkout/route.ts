@@ -13,6 +13,7 @@ import {
 } from "@/lib/stripe";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const checkoutSchema = z.object({
   membershipId: z.string().min(1),

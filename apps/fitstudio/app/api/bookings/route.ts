@@ -14,6 +14,7 @@ import { formatDateTime } from "@/lib/utils";
 import { createBookingSchema } from "@/lib/zod";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const SESSION_TYPES_REQUIRING_STAFF = new Set<string>([
   "PRIVATE",

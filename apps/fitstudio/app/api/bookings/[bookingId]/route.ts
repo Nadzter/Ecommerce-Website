@@ -14,6 +14,7 @@ import { formatDateTime } from "@/lib/utils";
 import { promoteNextFromWaitlist } from "@/lib/waitlist";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 interface RouteContext {
   params: { bookingId: string };

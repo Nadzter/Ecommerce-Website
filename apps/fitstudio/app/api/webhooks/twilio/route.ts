@@ -20,6 +20,7 @@ import { formatDateTime } from "@/lib/utils";
 import { promoteNextFromWaitlist } from "@/lib/waitlist";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const TWIML_HEADERS = { "content-type": "text/xml; charset=utf-8" };
 const CHAT_HISTORY_TURNS = 10;

@@ -8,6 +8,7 @@ import { getStripe } from "@/lib/stripe";
 import { getCurrentStudio } from "@/lib/tenant";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const STATE_COOKIE = "__fitstudio_stripe_oauth_state";
 

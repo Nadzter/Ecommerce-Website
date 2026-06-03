@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStudio } from "@/lib/tenant";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 interface RouteContext {
   params: { classId: string };

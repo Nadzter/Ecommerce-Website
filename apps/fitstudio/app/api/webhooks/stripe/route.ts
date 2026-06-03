@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { fromStripeMinorUnits, getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 interface MembershipMetadata {
   studioId?: string;

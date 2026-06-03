@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentStudio } from "@/lib/tenant";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const querySchema = z.object({
   scope: z.enum(["upcoming", "past", "all"]).default("upcoming"),

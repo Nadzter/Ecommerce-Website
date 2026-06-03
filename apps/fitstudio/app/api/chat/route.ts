@@ -13,6 +13,7 @@ import { getAuthContext } from "@/lib/auth";
 import { getCurrentStudio } from "@/lib/tenant";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
