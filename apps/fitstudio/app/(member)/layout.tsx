@@ -1,4 +1,5 @@
 import { getCurrentStudio } from "@/lib/tenant";
+import { ChatWidget } from "@/components/chatbot/ChatWidget";
 import { StudioHeader } from "@/components/member/studio-header";
 
 /**
@@ -19,6 +20,13 @@ export default async function MemberLayout({
       <footer className="border-t py-6 text-center text-xs text-muted-foreground">
         Powered by FitStudio · © {new Date().getFullYear()} {studio.name}
       </footer>
+      <ChatWidget
+        studio={{
+          id: studio.id,
+          name: studio.name,
+          primaryColor: studio.primaryColor,
+        }}
+      />
     </div>
   );
 }

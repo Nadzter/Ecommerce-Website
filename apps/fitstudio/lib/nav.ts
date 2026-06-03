@@ -2,6 +2,7 @@ import {
   CalendarDays,
   CreditCard,
   LayoutDashboard,
+  Megaphone,
   QrCode,
   Settings,
   Tags,
@@ -56,6 +57,12 @@ export const dashboardNav: readonly NavItem[] = [
     href: "/dashboard/payments",
     icon: CreditCard,
     description: "Review payments, refunds and outstanding invoices.",
+  },
+  {
+    label: "Marketing",
+    href: "/dashboard/marketing",
+    icon: Megaphone,
+    description: "AI-generated copy for Instagram, WhatsApp, and email.",
   },
   {
     label: "Settings",
