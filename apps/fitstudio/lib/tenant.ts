@@ -3,46 +3,12 @@ import { notFound } from "next/navigation";
 import type { Studio } from "@/prisma/generated/client";
 
 import { prisma } from "./prisma";
+import { TENANT_HEADER, extractStudioSlug } from "./tenant-edge";
 
-/**
- * Header injected by `middleware.ts` once a request has been routed to a
- * specific tenant. Reading from a header (rather than a cookie or context
- * provider) keeps tenant resolution synchronous inside Server Components.
- */
-export const TENANT_HEADER = "x-fitstudio-tenant";
-
-const ROOT_DOMAIN =
-  process.env.NEXT_PUBLIC_ROOT_DOMAIN?.toLowerCase() ?? "fitstudio.app";
-
-/**
- * Strip the trailing port from a `Host` header value, if present.
- */
-function stripPort(host: string): string {
-  const colon = host.indexOf(":");
-  return colon === -1 ? host : host.slice(0, colon);
-}
-
-/**
- * Return the tenant slug encoded in the `Host` header, or `null` when the
- * request targets the bare root domain (e.g. marketing site). Subdomains
- * such as `www` and `app` are ignored.
- */
-export function extractStudioSlug(host: string | null): string | null {
-  if (!host) return null;
-  const cleaned = stripPort(host).toLowerCase();
-  const root = ROOT_DOMAIN;
-
-  if (cleaned === root || cleaned === `www.${root}`) return null;
-
-  if (cleaned.endsWith(`.${root}`)) {
-    const candidate = cleaned.slice(0, -1 * (root.length + 1));
-    if (!candidate || candidate === "www" || candidate === "app") return null;
-    if (candidate.includes(".")) return null;
-    return candidate;
-  }
-
-  return null;
-}
+// Re-export the Edge-safe helpers so server code can keep importing
+// everything from `@/lib/tenant`. Middleware should import from
+// `@/lib/tenant-edge` directly to stay Edge-compatible.
+export { TENANT_HEADER, extractStudioSlug };
 
 /**
  * Resolve the slug for the active request. In production this comes from the

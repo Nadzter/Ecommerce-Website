@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { TENANT_HEADER, extractStudioSlug } from "@/lib/tenant";
+import { TENANT_HEADER, extractStudioSlug } from "@/lib/tenant-edge";
 
 const TENANT_COOKIE = "__fitstudio_dev_tenant";
 
