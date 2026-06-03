@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 
 import { addCredits } from "@/lib/credits";
 import { generateInvoice } from "@/lib/invoicing";
+import { enqueueNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { fromStripeMinorUnits, getStripe } from "@/lib/stripe";
 
@@ -113,14 +114,28 @@ async function handlePaymentSucceeded(
   });
 
   // Spain-compliant invoice with Verifactu hash + R2 PDF upload.
+  let invoiceUrl: string | undefined;
   try {
-    await generateInvoice(payment.id);
+    const generated = await generateInvoice(payment.id);
+    invoiceUrl = generated.pdfUrl;
   } catch (error) {
     console.error("[stripe-webhook] invoice generation failed", {
       paymentId: payment.id,
       error,
     });
   }
+
+  await enqueueNotification({
+    type: "payment_received",
+    userId: meta.userId,
+    studioId: meta.studioId,
+    data: {
+      amount: amount.toFixed(currency === "LBP" ? 0 : 2),
+      currency,
+      membershipName: membership?.name ?? "Studio services",
+      invoiceUrl: invoiceUrl ?? "",
+    },
+  });
 }
 
 async function handleSubscriptionRenewed(
@@ -193,18 +208,44 @@ async function handleSubscriptionDeleted(
     studioId: meta.studioId,
     userId: meta.userId,
   });
-  if (meta.userId && meta.studioId) {
-    await prisma.userMembership.updateMany({
-      where: {
-        userId: meta.userId,
-        studioId: meta.studioId,
-        membershipId: meta.membershipId ?? undefined,
-        isActive: true,
-      },
-      data: { isActive: false, endsAt: new Date() },
-    });
-  }
-  // Phase 4 will send a WhatsApp / email notification here.
+  if (!meta.userId || !meta.studioId) return;
+
+  await prisma.userMembership.updateMany({
+    where: {
+      userId: meta.userId,
+      studioId: meta.studioId,
+      membershipId: meta.membershipId ?? undefined,
+      isActive: true,
+    },
+    data: { isActive: false, endsAt: new Date() },
+  });
+
+  // Notify the member that their plan has ended. We send the
+  // `membership_expiring` template immediately (per spec) using the
+  // subscription's cancel-at timestamp as the expiry date so the copy
+  // stays accurate even if Stripe and our DB drift.
+  const cancelAt =
+    typeof subscription.canceled_at === "number"
+      ? new Date(subscription.canceled_at * 1000)
+      : new Date();
+  const membership = meta.membershipId
+    ? await prisma.membership.findFirst({
+        where: { id: meta.membershipId, studioId: meta.studioId },
+        select: { name: true },
+      })
+    : null;
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://fitstudio.app";
+  await enqueueNotification({
+    type: "membership_expiring",
+    userId: meta.userId,
+    studioId: meta.studioId,
+    data: {
+      membershipName: membership?.name ?? "membership",
+      expiryDate: cancelAt.toISOString().slice(0, 10),
+      renewUrl: `${appUrl.replace(/\/+$/, "")}/membership`,
+    },
+  });
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {

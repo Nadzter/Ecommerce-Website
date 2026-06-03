@@ -4,8 +4,13 @@ import { ApiErrors, ok, parseBody, withApi } from "@/lib/api";
 import { getAuthContext } from "@/lib/auth";
 import { resolveCredit } from "@/lib/booking";
 import { deductCredit } from "@/lib/credits";
+import {
+  enqueueNotification,
+  scheduleBookingReminder,
+} from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudio } from "@/lib/tenant";
+import { formatDateTime } from "@/lib/utils";
 import { createBookingSchema } from "@/lib/zod";
 
 export const runtime = "nodejs";
@@ -42,6 +47,7 @@ export async function POST(request: Request): Promise<Response> {
     const session = await prisma.class.findFirst({
       where: { id: input.classId, studioId: studio.id, cancelledAt: null },
       include: {
+        instructor: { select: { firstName: true, lastName: true } },
         _count: { select: { bookings: { where: { status: "CONFIRMED" } } } },
       },
     });
@@ -124,6 +130,52 @@ export async function POST(request: Request): Promise<Response> {
         },
       });
       waitlistPosition = ahead + 1;
+    }
+
+    // CONFIRMED bookings get an immediate confirmation push and a
+    // scheduled 1-hour-before reminder. Waitlisted bookings produce no
+    // notification — the response carries the queue position so the
+    // member sees it inline.
+    if (booking.status === BookingStatus.CONFIRMED) {
+      const member = await prisma.user.findUnique({
+        where: { id: targetUserId },
+        select: { firstName: true, lastName: true },
+      });
+      const data = {
+        memberName:
+          [member?.firstName, member?.lastName].filter(Boolean).join(" ") ||
+          "",
+        className: session.title,
+        instructorName:
+          [session.instructor.firstName, session.instructor.lastName]
+            .filter(Boolean)
+            .join(" ") || "",
+        date: formatDateTime(session.startTime, studio.timezone),
+        time: new Intl.DateTimeFormat("en-GB", {
+          timeZone: studio.timezone,
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(session.startTime),
+      };
+
+      await enqueueNotification({
+        type: "booking_confirmed",
+        userId: targetUserId,
+        studioId: studio.id,
+        data,
+      });
+      const reminderJobId = await scheduleBookingReminder({
+        userId: targetUserId,
+        studioId: studio.id,
+        data: { className: data.className, time: data.time },
+        classStart: session.startTime,
+      });
+      if (reminderJobId) {
+        await prisma.booking.update({
+          where: { id: booking.id },
+          data: { reminderJobId },
+        });
+      }
     }
 
     return ok(

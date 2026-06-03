@@ -109,16 +109,27 @@ model Studio {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  users           User[]
-  memberships     Membership[]
-  userMemberships UserMembership[]
-  classes         Class[]
-  bookings        Booking[]
-  payments        Payment[]
-  invoices        InvoiceRecord[]
-  invoiceSequence StudioInvoiceSequence?
+  users               User[]
+  memberships         Membership[]
+  userMemberships     UserMembership[]
+  classes             Class[]
+  bookings            Booking[]
+  payments            Payment[]
+  invoices            InvoiceRecord[]
+  invoiceSequence     StudioInvoiceSequence?
+  notificationSettings StudioNotificationSettings?
 
   @@index([slug])
+}
+
+model StudioNotificationSettings {
+  studioId        String   @id
+  studio          Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  /// Notification types that are switched ON for this studio. Types not
+  /// listed are treated as disabled.
+  enabledTypes    String[] @default(["booking_confirmed", "booking_reminder", "waitlist_promoted", "booking_cancelled", "payment_received", "membership_expiring"])
+  defaultLanguage Language @default(es)
+  updatedAt       DateTime @updatedAt
 }
 
 model User {
@@ -235,6 +246,10 @@ model Booking {
   checkedInAt   DateTime?
   cancelledAt   DateTime?
   promotedAt    DateTime?
+  /// BullMQ job id for the 1-hour-before reminder. Removed from the queue
+  /// when the booking is cancelled or promoted; null when no reminder
+  /// was scheduled (e.g. waitlist).
+  reminderJobId String?
   createdAt     DateTime      @default(now())
 
   @@unique([classId, userId])

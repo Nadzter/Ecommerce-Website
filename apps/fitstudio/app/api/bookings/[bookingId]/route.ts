@@ -4,8 +4,13 @@ import { ApiErrors, ok, withApi } from "@/lib/api";
 import { getAuthContext } from "@/lib/auth";
 import { cancelAndRefund } from "@/lib/booking";
 import { canMemberCancel } from "@/lib/booking-rules";
+import {
+  enqueueNotification,
+  removeNotificationJob,
+} from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { getCurrentStudio } from "@/lib/tenant";
+import { formatDateTime } from "@/lib/utils";
 import { promoteNextFromWaitlist } from "@/lib/waitlist";
 
 export const runtime = "nodejs";
@@ -48,12 +53,33 @@ export async function DELETE(
       throw ApiErrors.conflict("Booking is already cancelled");
     }
 
+    // Drop the scheduled 1-hour reminder before we mutate the booking
+    // row. removeNotificationJob is idempotent so it's safe if the job
+    // has already fired or never existed.
+    await removeNotificationJob(booking.reminderJobId);
+
     const result = await cancelAndRefund(booking.id);
+
+    const dateLabel = formatDateTime(booking.class.startTime, studio.timezone);
+    await enqueueNotification({
+      type: "booking_cancelled",
+      userId: booking.userId,
+      studioId: studio.id,
+      data: { className: booking.class.title, date: dateLabel },
+    });
 
     let promoted: { promotedBookingId: string | null; userId: string | null } =
       { promotedBookingId: null, userId: null };
     if (result.wasConfirmed && booking.class.cancelledAt === null) {
       promoted = await promoteNextFromWaitlist(booking.classId, studio.id);
+      if (promoted.promotedBookingId && promoted.userId) {
+        await enqueueNotification({
+          type: "waitlist_promoted",
+          userId: promoted.userId,
+          studioId: studio.id,
+          data: { className: booking.class.title, date: dateLabel },
+        });
+      }
     }
 
     return ok({

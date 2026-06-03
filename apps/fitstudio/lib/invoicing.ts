@@ -13,12 +13,6 @@ import {
   type InvoiceDocumentProps,
 } from "@/components/invoice/InvoiceDocument";
 
-const DEFAULT_VAT_RATES: Record<"ES" | "AE" | "LB", number> = {
-  ES: 21,
-  AE: 5,
-  LB: 11,
-};
-
 export interface GeneratedInvoice {
   invoiceId: string;
   invoiceNumber: string;
@@ -153,9 +147,12 @@ export async function generateInvoice(
   }
 
   const totalNumber = Number(payment.amount);
-  const vatRate =
-    Number(payment.studio.vatRate ?? 0) ||
-    DEFAULT_VAT_RATES[payment.studio.country];
+  const vatRate = Number(payment.studio.vatRate);
+  if (!Number.isFinite(vatRate) || vatRate < 0) {
+    throw new Error(
+      `Studio ${payment.studio.id} has an invalid vatRate (${payment.studio.vatRate}); set it explicitly in studio settings`,
+    );
+  }
   const baseAmount = totalNumber / (1 + vatRate / 100);
   const vatAmount = totalNumber - baseAmount;
 

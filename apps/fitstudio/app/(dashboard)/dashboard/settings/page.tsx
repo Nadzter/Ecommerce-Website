@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, CreditCard } from "lucide-react";
+import { Bell, ChevronRight, CreditCard } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -80,6 +80,36 @@ export default async function SettingsPage(): Promise<JSX.Element> {
           >
             <Link href="/dashboard/settings/payments">
               Open payments setup
+              <ChevronRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-md bg-secondary text-secondary-foreground">
+              <Bell className="h-4 w-4" aria-hidden />
+            </span>
+            <div>
+              <CardTitle className="text-base">Notifications</CardTitle>
+              <CardDescription>
+                Toggle which automatic WhatsApp / email updates members
+                receive.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="cursor-pointer gap-2 transition-colors duration-200"
+          >
+            <Link href="/dashboard/settings/notifications">
+              Configure notifications
               <ChevronRight className="h-4 w-4" aria-hidden />
             </Link>
           </Button>
