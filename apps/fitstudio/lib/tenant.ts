@@ -1,5 +1,4 @@
 import { headers } from "next/headers";
-import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Studio } from "@/prisma/generated/client";
 
@@ -38,12 +37,10 @@ export function extractStudioSlug(host: string | null): string | null {
   if (cleaned.endsWith(`.${root}`)) {
     const candidate = cleaned.slice(0, -1 * (root.length + 1));
     if (!candidate || candidate === "www" || candidate === "app") return null;
-    // Multi-level subdomains (a.b.fitstudio.app) are not tenant-mapped.
     if (candidate.includes(".")) return null;
     return candidate;
   }
 
-  // Vercel preview deployments and bare localhost have no tenant prefix.
   return null;
 }
 
@@ -61,12 +58,8 @@ export function getStudioSlug(): string | null {
 /**
  * Load the active studio from the database, throwing a Next.js 404 when no
  * tenant is in scope or the slug does not map to a registered studio.
- *
- * The result is memoised per request via React's `cache()` so that multiple
- * Server Components in the same render can call it without duplicating
- * database round-trips.
  */
-export const getCurrentStudio = cache(async (): Promise<Studio> => {
+export async function getCurrentStudio(): Promise<Studio> {
   const slug = getStudioSlug();
   if (!slug) notFound();
 
@@ -74,17 +67,15 @@ export const getCurrentStudio = cache(async (): Promise<Studio> => {
   if (!studio) notFound();
 
   return studio;
-});
+}
 
 /**
  * Variant of {@link getCurrentStudio} that returns `null` instead of
  * triggering a 404, suitable for layouts that should render gracefully even
  * when the tenant is unknown (for example the marketing root).
  */
-export const tryGetCurrentStudio = cache(
-  async (): Promise<Studio | null> => {
-    const slug = getStudioSlug();
-    if (!slug) return null;
-    return prisma.studio.findUnique({ where: { slug } });
-  },
-);
+export async function tryGetCurrentStudio(): Promise<Studio | null> {
+  const slug = getStudioSlug();
+  if (!slug) return null;
+  return prisma.studio.findUnique({ where: { slug } });
+}

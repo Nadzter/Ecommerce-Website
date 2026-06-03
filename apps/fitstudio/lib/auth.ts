@@ -1,6 +1,5 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { cache } from "react";
 import type { User, UserRole } from "@/prisma/generated/client";
 
 import { prisma } from "./prisma";
@@ -20,20 +19,16 @@ export interface AuthContext {
 /**
  * Read the active Clerk session and resolve the matching `User` row from the
  * database. Returns `null` when the visitor is anonymous.
- *
- * Memoised per request to avoid repeated lookups inside a render tree.
  */
-export const getAuthContext = cache(
-  async (): Promise<AuthContext | null> => {
-    const { userId: clerkId } = auth();
-    if (!clerkId) return null;
+export async function getAuthContext(): Promise<AuthContext | null> {
+  const { userId: clerkId } = auth();
+  if (!clerkId) return null;
 
-    const user = await prisma.user.findUnique({ where: { clerkId } });
-    if (!user) return null;
+  const user = await prisma.user.findUnique({ where: { clerkId } });
+  if (!user) return null;
 
-    return { user, studioId: user.studioId };
-  },
-);
+  return { user, studioId: user.studioId };
+}
 
 /**
  * Require a logged-in user, redirecting to Clerk's sign-in flow when the
