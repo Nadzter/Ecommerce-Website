@@ -1,17 +1,41 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { TENANT_HEADER, extractStudioSlug } from "@/lib/tenant-edge";
+/**
+ * The header name middleware stamps the resolved tenant slug onto.
+ * Server Components read this back via `headers().get(TENANT_HEADER)`.
+ * Kept in sync with `lib/tenant-edge.ts` — the value is duplicated here
+ * intentionally so this middleware has zero custom imports and stays
+ * Edge-runtime safe.
+ */
+const TENANT_HEADER = "x-fitstudio-tenant";
 
 const TENANT_COOKIE = "__fitstudio_dev_tenant";
 
-/**
- * Resolve the tenant slug for an incoming request:
- *
- *  • Production: read `Host` header (e.g. `acme.fitstudio.app` → `acme`).
- *  • Development: fall back to `?studio=<slug>` query string, and as a
- *    final fallback the dev cookie set on a previous visit. The cookie
- *    survives auth redirects so the simulated subdomain isn't lost.
- */
+const ROOT_DOMAIN =
+  process.env.NEXT_PUBLIC_ROOT_DOMAIN?.toLowerCase() ?? "fitstudio.app";
+
+function stripPort(host: string): string {
+  const colon = host.indexOf(":");
+  return colon === -1 ? host : host.slice(0, colon);
+}
+
+function extractStudioSlug(host: string | null): string | null {
+  if (!host) return null;
+  const cleaned = stripPort(host).toLowerCase();
+  const root = ROOT_DOMAIN;
+
+  if (cleaned === root || cleaned === `www.${root}`) return null;
+
+  if (cleaned.endsWith(`.${root}`)) {
+    const candidate = cleaned.slice(0, -1 * (root.length + 1));
+    if (!candidate || candidate === "www" || candidate === "app") return null;
+    if (candidate.includes(".")) return null;
+    return candidate;
+  }
+
+  return null;
+}
+
 function resolveStudioSlug(request: NextRequest): {
   slug: string | null;
   fromQuery: boolean;
@@ -35,13 +59,10 @@ function resolveStudioSlug(request: NextRequest): {
 }
 
 /**
- * Plain Edge middleware that only does tenant resolution — no auth.
- * Clerk's `clerkMiddleware()` would normally protect dashboard routes
- * here, but it pulls Node-only modules (`#crypto`, `devBrowser`) that
- * the Edge runtime rejects on Vercel. Auth still happens later: every
- * dashboard layout and protected page calls `requireStaff()` /
- * `requireOwner()` from `lib/auth.ts`, which runs server-side (Node)
- * and redirects to `/sign-in` when needed.
+ * Plain Edge middleware — does only tenant resolution. Auth happens
+ * later in Server Components via `requireStaff()` / `requireOwner()`
+ * from `lib/auth.ts`. No custom imports here so the Edge bundle stays
+ * 100% framework-only.
  */
 export default function middleware(request: NextRequest): NextResponse {
   const { slug, fromQuery } = resolveStudioSlug(request);
@@ -73,9 +94,7 @@ export default function middleware(request: NextRequest): NextResponse {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files.
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes so webhooks and tenant scoping are applied.
     "/(api|trpc)(.*)",
   ],
 };
