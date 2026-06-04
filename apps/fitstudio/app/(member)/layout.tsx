@@ -2,6 +2,8 @@ import { getCurrentStudio } from "@/lib/tenant";
 import { ChatWidget } from "@/components/chatbot/ChatWidget";
 import { StudioHeader } from "@/components/member/studio-header";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Public member portal wrapper. Resolves the tenant once and shares it with
  * nested pages via header lookups.

@@ -3,6 +3,8 @@ import { getCurrentStudio } from "@/lib/tenant";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/topbar";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Studio owner / staff dashboard shell. Layouts run on every request inside
  * the route group, so the role check here gates all nested pages.
