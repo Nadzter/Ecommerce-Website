@@ -1,30 +1,16 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { TENANT_HEADER, extractStudioSlug } from "@/lib/tenant-edge";
 
 const TENANT_COOKIE = "__fitstudio_dev_tenant";
 
-const isProtectedDashboardRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/api/dashboard(.*)",
-]);
-
-const isPublicRoute = createRouteMatcher([
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/webhooks/(.*)",
-  "/_next/(.*)",
-  "/favicon.ico",
-]);
-
 /**
  * Resolve the tenant slug for an incoming request:
  *
  *  • Production: read `Host` header (e.g. `acme.fitstudio.app` → `acme`).
- *  • Development: fall back to `?studio=<slug>` query string, and as a final
- *    fallback the dev cookie set on a previous visit. The cookie lets Clerk
- *    redirect back to `/dashboard` without losing the simulated subdomain.
+ *  • Development: fall back to `?studio=<slug>` query string, and as a
+ *    final fallback the dev cookie set on a previous visit. The cookie
+ *    survives auth redirects so the simulated subdomain isn't lost.
  */
 function resolveStudioSlug(request: NextRequest): {
   slug: string | null;
@@ -48,7 +34,16 @@ function resolveStudioSlug(request: NextRequest): {
   return { slug: null, fromQuery: false };
 }
 
-export default clerkMiddleware((authFn, request) => {
+/**
+ * Plain Edge middleware that only does tenant resolution — no auth.
+ * Clerk's `clerkMiddleware()` would normally protect dashboard routes
+ * here, but it pulls Node-only modules (`#crypto`, `devBrowser`) that
+ * the Edge runtime rejects on Vercel. Auth still happens later: every
+ * dashboard layout and protected page calls `requireStaff()` /
+ * `requireOwner()` from `lib/auth.ts`, which runs server-side (Node)
+ * and redirects to `/sign-in` when needed.
+ */
+export default function middleware(request: NextRequest): NextResponse {
   const { slug, fromQuery } = resolveStudioSlug(request);
 
   const requestHeaders = new Headers(request.headers);
@@ -58,17 +53,10 @@ export default clerkMiddleware((authFn, request) => {
     requestHeaders.delete(TENANT_HEADER);
   }
 
-  if (isProtectedDashboardRoute(request) && !isPublicRoute(request)) {
-    authFn().protect();
-  }
-
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
 
-  // Persist the dev tenant in a cookie so it survives Clerk redirects that
-  // would otherwise strip the `?studio=` query string. Cookies are not used
-  // in production — there the subdomain is authoritative.
   if (fromQuery && slug && process.env.NODE_ENV !== "production") {
     response.cookies.set({
       name: TENANT_COOKIE,
@@ -81,12 +69,11 @@ export default clerkMiddleware((authFn, request) => {
   }
 
   return response;
-});
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files. Source: official Clerk
-    // middleware example.
+    // Skip Next.js internals and static files.
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes so webhooks and tenant scoping are applied.
     "/(api|trpc)(.*)",
