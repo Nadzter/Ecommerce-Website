@@ -11,14 +11,22 @@ import { TENANT_HEADER, extractStudioSlug } from "./tenant-edge";
 export { TENANT_HEADER, extractStudioSlug };
 
 /**
- * Resolve the slug for the active request. In production this comes from the
- * subdomain via `middleware.ts`; in development we allow a `?studio=<slug>`
- * query string fallback set by the same middleware on the
- * `x-fitstudio-tenant` header.
+ * Resolve the slug for the active request.
+ *
+ * Without middleware we can't read the request URL inside layouts, so
+ * the slug is resolved from:
+ *   1. `x-fitstudio-tenant` header (set by middleware if one exists)
+ *   2. `NEXT_PUBLIC_DEFAULT_STUDIO_SLUG` env var
+ *   3. Hard-coded `"acme"` so the demo always has a tenant.
  */
 export function getStudioSlug(): string | null {
-  const slug = headers().get(TENANT_HEADER);
-  return slug && slug.length > 0 ? slug : null;
+  const fromHeader = headers().get(TENANT_HEADER);
+  if (fromHeader && fromHeader.length > 0) return fromHeader;
+
+  const fromEnv = process.env.NEXT_PUBLIC_DEFAULT_STUDIO_SLUG;
+  if (fromEnv && fromEnv.length > 0) return fromEnv;
+
+  return "acme";
 }
 
 /**
