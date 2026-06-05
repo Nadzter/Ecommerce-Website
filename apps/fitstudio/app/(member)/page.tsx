@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
-import { getCurrentStudio } from "@/lib/tenant";
+import { tryGetCurrentStudio } from "@/lib/tenant";
 import { formatDateTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -116,7 +116,8 @@ async function loadMyBookings(
 }
 
 export default async function MemberHomePage(): Promise<JSX.Element> {
-  const studio = await getCurrentStudio();
+  const studio = await tryGetCurrentStudio();
+  if (!studio) return <div />;
   const { userId } = auth();
 
   const [classes, mine] = await Promise.all([
