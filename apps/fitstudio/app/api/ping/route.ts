@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export async function GET(): Promise<Response> {
   return NextResponse.json({
     ok: true,
+    version: 2,
     commit: process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown",
     ts: new Date().toISOString(),
   });
