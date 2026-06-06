@@ -126,14 +126,25 @@ export default async function MemberHomePage(): Promise<JSX.Element> {
   ]);
 
   return (
-    <div className="space-y-10">
-      <section className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Book your next class
-        </h1>
-        <p className="text-muted-foreground">
-          Browse the upcoming schedule at {studio.name}.
-        </p>
+    <div className="space-y-12">
+      <section className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-background via-background to-muted/40 p-8 sm:p-12">
+        <div className="relative max-w-2xl space-y-3">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            {studio.name}
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            Book your next class
+          </h1>
+          <p className="text-base text-muted-foreground">
+            Reserve a spot in the upcoming schedule — secure your machine, your
+            time slot, and your favourite instructor in seconds.
+          </p>
+        </div>
+        <div
+          className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full opacity-10 blur-3xl"
+          style={{ backgroundColor: studio.primaryColor }}
+          aria-hidden
+        />
       </section>
 
       {mine ? (
@@ -187,8 +198,15 @@ export default async function MemberHomePage(): Promise<JSX.Element> {
         </section>
       ) : null}
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Upcoming classes</h2>
+      <section className="space-y-6">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+            Upcoming classes
+          </h2>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            {classes.length} scheduled
+          </p>
+        </div>
         {classes.length === 0 ? (
           <Card>
             <CardHeader>
