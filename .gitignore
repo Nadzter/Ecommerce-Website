@@ -49,6 +49,8 @@ ios/.swiftpm/
 # Prisma
 backend/prisma/*.db
 backend/prisma/*.db-journal
+backend/prisma/generated/
+apps/*/prisma/generated/
 
 # Generated (note: shared/ts/src/generated and ios/AmwaliKit/API/Generated are
 # committed so a fresh checkout typechecks without running the generator. CI

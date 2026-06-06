@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '#prisma-client';
 
 declare module 'fastify' {
   interface FastifyInstance {

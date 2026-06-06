@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '#prisma-client';
 import type { Env } from '../config/env.js';
 
 export type Db = PrismaClient;
