@@ -6,13 +6,14 @@ const PRODUCT_LINKS = [
   { href: '#features', label: 'Features' },
   { href: '#demo', label: 'Demo' },
   { href: '#how', label: 'How it works' },
-  { href: '#pricing', label: 'Pricing' },
+  { href: '#contact', label: 'Contact' },
 ]
 
 const MARKET_LINKS = [
   { label: 'Lebanon 🇱🇧' },
   { label: 'UAE 🇦🇪' },
   { label: 'Coming soon: Saudi Arabia 🇸🇦', muted: true },
+  { label: 'Coming soon: Egypt 🇪🇬', muted: true },
 ]
 
 const COMPANY_LINKS = [
@@ -39,39 +40,34 @@ function IconX() {
 
 export function Footer() {
   return (
-    <footer className="bg-navy-mid text-white/75 pt-14 pb-8">
+    <footer className="bg-ink-mid text-white/75 pt-14 pb-8">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           <div className="lg:col-span-1">
-            <a href="#top" className="inline-flex items-baseline gap-1.5 text-2xl" aria-label="Amwali Pay home">
-              <span className="font-arabic italic text-gold" lang="ar" dir="rtl">
-                أموالي
-              </span>
+            <a
+              href="#top"
+              className="inline-flex items-center gap-1 text-2xl"
+              aria-label="Amwali Pay home"
+            >
+              <span className="brand-logo-mark text-brand-light">amwali</span>
               <span className="font-bold text-white">pay</span>
             </a>
             <p className="mt-3 text-[13px] text-white/55 leading-relaxed max-w-xs">
               {BRAND.taglineEn}
-            </p>
-            <p
-              className="mt-1 text-[13px] font-arabic text-gold/70"
-              lang="ar"
-              dir="rtl"
-            >
-              {BRAND.taglineAr}
             </p>
 
             <div className="mt-5 flex items-center gap-3">
               <a
                 href="#"
                 aria-label="LinkedIn"
-                className="w-9 h-9 rounded-full border border-white/15 grid place-items-center text-white/70 hover:text-gold hover:border-gold/50 transition-colors"
+                className="w-9 h-9 rounded-full border border-white/15 grid place-items-center text-white/70 hover:text-brand-light hover:border-brand-light/50 transition-colors"
               >
                 <IconLinkedIn />
               </a>
               <a
                 href="#"
                 aria-label="X (formerly Twitter)"
-                className="w-9 h-9 rounded-full border border-white/15 grid place-items-center text-white/70 hover:text-gold hover:border-gold/50 transition-colors"
+                className="w-9 h-9 rounded-full border border-white/15 grid place-items-center text-white/70 hover:text-brand-light hover:border-brand-light/50 transition-colors"
               >
                 <IconX />
               </a>
@@ -79,7 +75,7 @@ export function Footer() {
           </div>
 
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-gold font-semibold mb-4">
+            <div className="text-[11px] uppercase tracking-wider text-brand-light font-semibold mb-4">
               Product
             </div>
             <ul className="space-y-2.5 text-sm">
@@ -94,15 +90,12 @@ export function Footer() {
           </div>
 
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-gold font-semibold mb-4">
+            <div className="text-[11px] uppercase tracking-wider text-brand-light font-semibold mb-4">
               Markets
             </div>
             <ul className="space-y-2.5 text-sm">
               {MARKET_LINKS.map((m) => (
-                <li
-                  key={m.label}
-                  className={m.muted ? 'text-white/40' : 'text-white/70'}
-                >
+                <li key={m.label} className={m.muted ? 'text-white/40' : 'text-white/70'}>
                   {m.label}
                 </li>
               ))}
@@ -110,7 +103,7 @@ export function Footer() {
           </div>
 
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-gold font-semibold mb-4">
+            <div className="text-[11px] uppercase tracking-wider text-brand-light font-semibold mb-4">
               Company
             </div>
             <ul className="space-y-2.5 text-sm">
@@ -129,13 +122,7 @@ export function Footer() {
           <div className="text-white/55">
             © {BRAND.year} {BRAND.name} · Lebanon · UAE · Global
           </div>
-          <div
-            className="font-arabic text-gold/70"
-            lang="ar"
-            dir="rtl"
-          >
-            صُنع بحب في بيروت ودبي · {BRAND.year}
-          </div>
+          <div className="text-white/40">Built for the chat generation</div>
         </div>
       </div>
     </footer>

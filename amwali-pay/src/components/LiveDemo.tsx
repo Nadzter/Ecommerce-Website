@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { MARKETS, type Currency, type MarketCode } from '@/lib/constants'
-import { calcFee, formatCurrency, toUSD } from '@/lib/utils'
-import { FeeCalculator } from './FeeCalculator'
+import { formatCurrency } from '@/lib/utils'
 import { PhoneMockup } from './PhoneMockup'
 
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
@@ -17,11 +16,13 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
       initial={{ opacity: 0, y: -16, x: 16 }}
       animate={{ opacity: 1, y: 0, x: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      className="fixed top-6 right-6 z-50 max-w-sm rounded-2xl bg-navy text-white shadow-2xl px-5 py-4 border border-gold/30"
+      className="fixed top-6 right-6 z-50 max-w-sm rounded-2xl bg-ink text-white shadow-2xl px-5 py-4 border border-brand/30"
       role="status"
     >
       <div className="flex items-start gap-3">
-        <span className="text-gold text-lg leading-none">✦</span>
+        <span className="w-5 h-5 rounded-full bg-brand grid place-items-center text-white text-xs">
+          ✓
+        </span>
         <div className="text-sm font-medium">{message}</div>
       </div>
     </motion.div>
@@ -48,13 +49,9 @@ export default function LiveDemo() {
     setSimTrigger((v) => v + 1)
   }
 
-  const amountUSD = useMemo(() => toUSD(amount, currency), [amount, currency])
-  const { feeUSD } = calcFee(amountUSD)
-  const feeLabel = feeUSD !== null && amountUSD >= 20 ? formatCurrency(feeUSD, 'USD') : '—'
-
   function simulate() {
     setSimTrigger((v) => v + 1)
-    setTimeout(() => setToast(`Payment settled via ${m.settlementRail}!`), 5500)
+    setTimeout(() => setToast(`Payment settled via ${m.settlementRail}!`), 6500)
   }
 
   function reset() {
@@ -66,31 +63,28 @@ export default function LiveDemo() {
   }
 
   const steps = [
-    `Customer taps Amwali keyboard in ${platform}`,
-    `Enters ${formatCurrency(amount, currency)} and generates a secure link`,
-    'Recipient claims in one tap — link is unique and time-limited',
-    `Settles instantly via ${m.settlementRail} — bank earns, Amwali charges ${feeLabel}`,
+    `Customer is in ${platform} with someone they need to pay`,
+    'A tap on the keyboard globe brings up the amwali pay keyboard',
+    `Customer enters ${formatCurrency(amount, currency)} on a secure numerical keypad`,
+    `Face ID confirms · payment settles via ${m.settlementRail} in under 60 seconds`,
   ]
 
   return (
     <section id="demo" className="bg-white py-20 lg:py-28 relative">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="text-xs uppercase tracking-[0.2em] text-gold font-semibold mb-3">
+          <div className="text-xs uppercase tracking-[0.2em] text-brand font-semibold mb-3">
             Interactive sandbox
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-navy">Live market demo</h2>
-          <p className="font-arabic text-base text-navy/55 mt-2" lang="ar" dir="rtl">
-            جرّب أموالي في سوقك
-          </p>
-          <p className="mt-3 text-navy/60 text-sm sm:text-base">
+          <h2 className="text-3xl sm:text-4xl font-bold text-ink">Live market demo</h2>
+          <p className="mt-3 text-ink/60 text-sm sm:text-base">
             Pick a market, set an amount, and watch the entire payment flow play out
-            inside a real chat thread.
+            inside a real chat thread — keyboard, Face ID, and all.
           </p>
         </div>
 
         <div className="flex justify-center mb-10">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full border border-navy/10 bg-off-white">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-off-white">
             {(['lb', 'ae'] as MarketCode[]).map((code) => {
               const country = MARKETS[code]
               const active = market === code
@@ -100,13 +94,13 @@ export default function LiveDemo() {
                   onClick={() => setMarket(code)}
                   aria-pressed={active}
                   className={`relative inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-colors ${
-                    active ? 'text-white' : 'text-navy/70 hover:text-navy'
+                    active ? 'text-white' : 'text-ink/70 hover:text-ink'
                   }`}
                 >
                   {active && (
                     <motion.span
                       layoutId="demo-toggle-pill"
-                      className="absolute inset-0 rounded-full bg-navy -z-10"
+                      className="absolute inset-0 rounded-full bg-brand -z-10"
                       transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                     />
                   )}
@@ -138,29 +132,15 @@ export default function LiveDemo() {
               />
             </div>
 
-            <div className="order-1 lg:order-2 rounded-2xl border border-navy/10 bg-white p-6 sm:p-7 shadow-sm">
+            <div className="order-1 lg:order-2 rounded-2xl border border-border bg-white p-6 sm:p-7 shadow-sm">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <h3 className="text-2xl font-bold text-navy flex items-center gap-2">
+                  <h3 className="text-2xl font-bold text-ink flex items-center gap-2">
                     <span>{m.flag}</span>
                     {m.name}
                   </h3>
-                  <p
-                    className="text-sm font-arabic text-navy/55 mt-0.5"
-                    lang="ar"
-                    dir="rtl"
-                  >
-                    {m.nameAr}
-                  </p>
                 </div>
-                <span
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-full"
-                  style={{
-                    color: m.accentColor,
-                    backgroundColor: `${m.accentColor}14`,
-                    border: `1px solid ${m.accentColor}33`,
-                  }}
-                >
+                <span className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-brand-pale text-brand border border-brand/20">
                   {m.fact}
                 </span>
               </div>
@@ -169,12 +149,12 @@ export default function LiveDemo() {
                 <div>
                   <label
                     htmlFor="amount-input"
-                    className="text-xs font-semibold text-navy/55 uppercase tracking-wider"
+                    className="text-xs font-semibold text-ink/55 uppercase tracking-wider"
                   >
                     Amount
                   </label>
-                  <div className="mt-1.5 flex items-center rounded-xl border border-navy/15 bg-white focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20 transition">
-                    <span className="pl-4 text-navy/40 text-lg font-medium">
+                  <div className="mt-1.5 flex items-center rounded-xl border border-border bg-white focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition">
+                    <span className="pl-4 text-ink/40 text-lg font-medium">
                       {currency === 'USD' ? '$' : currency === 'AED' ? 'AED' : 'LBP'}
                     </span>
                     <input
@@ -186,16 +166,16 @@ export default function LiveDemo() {
                         const v = Number(e.target.value)
                         setAmount(Number.isFinite(v) ? v : 0)
                       }}
-                      className="w-full px-3 py-3 text-xl font-semibold text-navy bg-transparent outline-none"
+                      className="w-full px-3 py-3 text-xl font-semibold text-ink bg-transparent outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-xs font-semibold text-navy/55 uppercase tracking-wider mb-1.5">
+                  <div className="text-xs font-semibold text-ink/55 uppercase tracking-wider mb-1.5">
                     Currency
                   </div>
-                  <div className="inline-flex items-center gap-1 p-1 rounded-full border border-navy/10 bg-off-white">
+                  <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-off-white">
                     {m.currencies.map((c) => {
                       const active = currency === c
                       return (
@@ -204,7 +184,7 @@ export default function LiveDemo() {
                           onClick={() => setCurrency(c)}
                           aria-pressed={active}
                           className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                            active ? 'bg-navy text-white' : 'text-navy/70 hover:text-navy'
+                            active ? 'bg-brand text-white' : 'text-ink/70 hover:text-ink'
                           }`}
                         >
                           {c}
@@ -215,7 +195,7 @@ export default function LiveDemo() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-semibold text-navy/55 uppercase tracking-wider mb-1.5">
+                  <div className="text-xs font-semibold text-ink/55 uppercase tracking-wider mb-1.5">
                     Platform
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -236,8 +216,8 @@ export default function LiveDemo() {
                           aria-pressed={active}
                           className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition ${
                             active
-                              ? 'bg-navy text-white border-navy'
-                              : 'bg-white text-navy/75 border-navy/15 hover:border-navy/40'
+                              ? 'bg-ink text-white border-ink'
+                              : 'bg-white text-ink/75 border-border hover:border-ink/40'
                           }`}
                         >
                           <span aria-hidden>{emoji}</span>
@@ -248,29 +228,27 @@ export default function LiveDemo() {
                   </div>
                 </div>
 
-                <FeeCalculator market={market} amount={amount} currency={currency} />
-
                 <ol className="space-y-2.5 mt-2">
                   {steps.map((step, idx) => (
                     <li key={idx} className="flex items-start gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gold-pale border border-gold/40 grid place-items-center text-[11px] font-bold text-gold">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-pale border border-brand/30 grid place-items-center text-[11px] font-bold text-brand">
                         {idx + 1}
                       </span>
-                      <span className="text-[13px] text-navy/75 leading-snug">{step}</span>
+                      <span className="text-[13px] text-ink/75 leading-snug">{step}</span>
                     </li>
                   ))}
                 </ol>
 
                 <button
                   onClick={simulate}
-                  className="w-full h-12 rounded-xl bg-navy text-white font-semibold flex items-center justify-center gap-2 hover:bg-navy-mid transition-colors"
+                  className="w-full h-12 rounded-xl bg-brand text-white font-semibold flex items-center justify-center gap-2 hover:bg-brand-deep transition-colors shadow-md shadow-brand/20"
                 >
                   <span aria-hidden>▶</span>
                   Simulate payment in chat
                 </button>
                 <button
                   onClick={reset}
-                  className="block mx-auto text-xs text-navy/55 hover:text-navy underline-offset-4 hover:underline"
+                  className="block mx-auto text-xs text-ink/55 hover:text-ink underline-offset-4 hover:underline"
                 >
                   Reset
                 </button>

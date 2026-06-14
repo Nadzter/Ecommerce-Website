@@ -6,15 +6,18 @@ import {
   MARKETS,
   type Currency,
   type MarketCode,
-  type SampleMessage,
 } from '@/lib/constants'
 
 export type SimStage =
   | 'idle'
-  | 'opening'
-  | 'meDraft'
-  | 'meTyping'
-  | 'keyboardOpen'
+  | 'seedMessages'
+  | 'qwertyOpen'
+  | 'globeHighlight'
+  | 'switcherOpen'
+  | 'amwaliKeypad'
+  | 'amountEntered'
+  | 'faceIdScan'
+  | 'faceIdSuccess'
   | 'paymentSent'
   | 'recipientTyping'
   | 'recipientReply'
@@ -30,9 +33,14 @@ export interface SimMessage {
 export interface SimState {
   stage: SimStage
   messages: SimMessage[]
-  showKeyboard: boolean
+  showQwerty: boolean
+  globeHighlighted: boolean
+  showSwitcher: boolean
+  showAmwaliKeypad: boolean
+  typedDigits: string
+  showFaceId: boolean
+  faceIdSuccess: boolean
   showTyping: 'me' | 'them' | null
-  showPaymentBubble: boolean
   paymentSettled: boolean
 }
 
@@ -45,9 +53,14 @@ type Action =
 const initialState: SimState = {
   stage: 'idle',
   messages: [],
-  showKeyboard: false,
+  showQwerty: false,
+  globeHighlighted: false,
+  showSwitcher: false,
+  showAmwaliKeypad: false,
+  typedDigits: '',
+  showFaceId: false,
+  faceIdSuccess: false,
   showTyping: null,
-  showPaymentBubble: false,
   paymentSettled: false,
 }
 
@@ -138,60 +151,129 @@ export function useChatSimulation({
       timersRef.current.push(t)
     }
 
-    const initialMessages: SampleMessage[] = m.sampleMessages
+    const digits = String(Math.round(amount))
+    const seedLen = m.sampleMessages.length
 
-    initialMessages.forEach((msg, idx) => {
-      at(idx * 300, () => {
+    // Seed messages cascade
+    m.sampleMessages.forEach((msg, idx) => {
+      at(idx * 280, () => {
         if (idx === 0) {
-          dispatch({ type: 'set', partial: { messages: [], stage: 'opening' } })
+          dispatch({ type: 'set', partial: { messages: [], stage: 'seedMessages' } })
         }
         dispatch({
           type: 'add',
-          message: { id: `seed-${idx}-${Date.now()}`, text: msg.text, side: msg.side, type: 'text' },
+          message: {
+            id: `seed-${idx}-${Date.now()}`,
+            text: msg.text,
+            side: msg.side,
+            type: 'text',
+          },
         })
       })
     })
 
-    at(800 + initialMessages.length * 300, () => {
+    const base = seedLen * 280 + 600
+
+    // QWERTY keyboard slides up
+    at(base, () => {
+      dispatch({
+        type: 'set',
+        partial: { showQwerty: true, stage: 'qwertyOpen' },
+      })
+    })
+
+    // Globe icon highlighted
+    at(base + 900, () => {
+      dispatch({
+        type: 'set',
+        partial: { globeHighlighted: true, stage: 'globeHighlight' },
+      })
+    })
+
+    // Keyboard switcher opens
+    at(base + 1500, () => {
+      dispatch({
+        type: 'set',
+        partial: {
+          globeHighlighted: false,
+          showSwitcher: true,
+          stage: 'switcherOpen',
+        },
+      })
+    })
+
+    // Amwali keypad opens
+    at(base + 2600, () => {
+      dispatch({
+        type: 'set',
+        partial: {
+          showSwitcher: false,
+          showAmwaliKeypad: true,
+          stage: 'amwaliKeypad',
+        },
+      })
+    })
+
+    // Type digits one by one
+    digits.split('').forEach((_, i) => {
+      at(base + 3100 + i * 220, () => {
+        dispatch({
+          type: 'set',
+          partial: { typedDigits: digits.slice(0, i + 1) },
+        })
+      })
+    })
+
+    const afterTyping = base + 3100 + digits.length * 220 + 350
+
+    // Face ID scan
+    at(afterTyping, () => {
+      dispatch({
+        type: 'set',
+        partial: { showAmwaliKeypad: false, showFaceId: true, stage: 'faceIdScan' },
+      })
+    })
+
+    // Face ID success
+    at(afterTyping + 1400, () => {
+      dispatch({
+        type: 'set',
+        partial: { faceIdSuccess: true, stage: 'faceIdSuccess' },
+      })
+    })
+
+    // Payment bubble drops into chat
+    at(afterTyping + 2100, () => {
+      dispatch({
+        type: 'set',
+        partial: {
+          showFaceId: false,
+          faceIdSuccess: false,
+          showQwerty: false,
+          stage: 'paymentSent',
+        },
+      })
       dispatch({
         type: 'add',
         message: {
-          id: `me-draft-${Date.now()}`,
-          text: `Sending via Amwali on ${platform}…`,
+          id: paymentId,
+          text: '',
           side: 'me',
-          type: 'text',
+          type: 'payment',
         },
       })
-      dispatch({ type: 'set', partial: { stage: 'meDraft' } })
     })
 
-    at(1400 + initialMessages.length * 300, () => {
-      dispatch({ type: 'set', partial: { showTyping: 'me', stage: 'meTyping' } })
-    })
-
-    at(2000 + initialMessages.length * 300, () => {
+    // Recipient typing
+    at(afterTyping + 2900, () => {
       dispatch({
         type: 'set',
-        partial: { showTyping: null, showKeyboard: true, stage: 'keyboardOpen' },
+        partial: { showTyping: 'them', stage: 'recipientTyping' },
       })
     })
 
-    at(2800 + initialMessages.length * 300, () => {
-      dispatch({
-        type: 'add',
-        message: { id: paymentId, text: '', side: 'me', type: 'payment' },
-      })
-      dispatch({
-        type: 'set',
-        partial: { showKeyboard: false, showPaymentBubble: true, stage: 'paymentSent' },
-      })
-    })
-
-    at(3600 + initialMessages.length * 300, () => {
-      dispatch({ type: 'set', partial: { showTyping: 'them', stage: 'recipientTyping' } })
-    })
-
-    at(4400 + initialMessages.length * 300, () => {
+    // Recipient reply
+    at(afterTyping + 3700, () => {
       dispatch({ type: 'set', partial: { showTyping: null } })
       dispatch({
         type: 'add',
@@ -205,12 +287,13 @@ export function useChatSimulation({
       dispatch({ type: 'set', partial: { stage: 'recipientReply' } })
     })
 
-    at(5000 + initialMessages.length * 300, () => {
+    // Settled
+    at(afterTyping + 4300, () => {
       dispatch({ type: 'mark-success', id: paymentId })
       dispatch({ type: 'set', partial: { stage: 'settled' } })
     })
 
-    at(5500 + initialMessages.length * 300, () => {
+    at(afterTyping + 4800, () => {
       onComplete?.()
     })
 
@@ -221,9 +304,7 @@ export function useChatSimulation({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger])
 
-  // Silence unused warning for amount/currency — they are consumed by PhoneMockup directly,
-  // and we keep them on the hook signature for a stable public API.
-  void amount
+  void platform
   void currency
 
   return state

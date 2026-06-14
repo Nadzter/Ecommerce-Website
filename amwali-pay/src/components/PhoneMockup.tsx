@@ -22,9 +22,9 @@ export interface PhoneMockupProps {
 
 const TypingDots = () => (
   <div className="flex gap-1 items-end h-4">
-    <span className="typing-dot w-1.5 h-1.5 rounded-full bg-navy/40" />
-    <span className="typing-dot w-1.5 h-1.5 rounded-full bg-navy/40" />
-    <span className="typing-dot w-1.5 h-1.5 rounded-full bg-navy/40" />
+    <span className="typing-dot w-1.5 h-1.5 rounded-full bg-ink/40" />
+    <span className="typing-dot w-1.5 h-1.5 rounded-full bg-ink/40" />
+    <span className="typing-dot w-1.5 h-1.5 rounded-full bg-ink/40" />
   </div>
 )
 
@@ -38,84 +38,302 @@ interface PaymentDetails {
 function PaymentBubble({ details, settled }: { details: PaymentDetails; settled: boolean }) {
   if (settled) {
     return (
-      <div className="rounded-2xl bg-[#dcf8c6] text-navy w-[88%] p-3 shadow-sm">
-        <div className="flex items-center gap-2 text-xs font-semibold text-[#1f7a3d]">
-          <span className="w-5 h-5 rounded-full bg-[#1f7a3d] text-white grid place-items-center text-[10px]">
+      <div className="rounded-2xl bg-brand-pale border border-brand/20 text-ink w-[88%] p-3 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-semibold text-brand">
+          <span className="w-5 h-5 rounded-full bg-brand text-white grid place-items-center text-[10px]">
             ✓
           </span>
           Settled instantly
         </div>
-        <div className="mt-2 text-lg font-semibold">{formatCurrency(details.amount, details.currency)}</div>
-        <div className="text-[10px] text-navy/60 mt-0.5">via {details.rail}</div>
-        <div className="text-[9px] text-right text-navy/40 mt-1">9:42 ✓✓</div>
+        <div className="mt-2 text-lg font-semibold">
+          {formatCurrency(details.amount, details.currency)}
+        </div>
+        <div className="text-[10px] text-ink/55 mt-0.5">via {details.rail}</div>
+        <div className="text-[9px] text-right text-ink/35 mt-1">9:42 ✓✓</div>
       </div>
     )
   }
   return (
-    <div className="rounded-2xl bg-navy text-white w-[88%] p-3 shadow-md">
-      <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-gold font-semibold">
+    <div className="rounded-2xl bg-brand text-white w-[88%] p-3 shadow-md">
+      <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-white/90 font-semibold">
         <span className="flex items-center gap-1">
-          <span className="text-sm leading-none">✦</span>
-          <span lang="ar" dir="rtl" className="font-arabic">
-            أموالي
-          </span>
-          pay
+          <span className="text-sm leading-none">●</span>
+          amwali pay
         </span>
         <span className="text-white/60">Secure link</span>
       </div>
-      <div className="text-2xl font-bold mt-2">{formatCurrency(details.amount, details.currency)}</div>
-      <div className="text-[10px] text-white/60 mt-0.5">{details.equivalentText}</div>
+      <div className="text-2xl font-bold mt-2">
+        {formatCurrency(details.amount, details.currency)}
+      </div>
+      <div className="text-[10px] text-white/70 mt-0.5">{details.equivalentText}</div>
       <div className="mt-2 flex items-center justify-between text-[10px] text-white/70">
         <span>via {details.rail}</span>
         <span>Expires in 24h</span>
       </div>
-      <button className="mt-3 w-full rounded-lg bg-gold text-navy font-semibold py-2 text-xs">
+      <button className="mt-3 w-full rounded-lg bg-white text-brand font-semibold py-2 text-xs">
         Tap to collect →
       </button>
-      <div className="text-[9px] text-right text-white/40 mt-1">9:42 ✓</div>
+      <div className="text-[9px] text-right text-white/50 mt-1">9:42 ✓</div>
     </div>
   )
 }
 
-function KeyboardPopup({ details }: { details: PaymentDetails }) {
+const QWERTY_ROWS: string[][] = [
+  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+  ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
+]
+
+function QwertyKeyboard({ globeHighlighted }: { globeHighlighted: boolean }) {
+  return (
+    <div className="absolute bottom-0 left-0 right-0 bg-[#d1d5db] px-1.5 pt-2 pb-1.5">
+      {QWERTY_ROWS.map((row, ri) => (
+        <div key={ri} className="flex justify-center gap-[3px] mb-[5px]">
+          {ri === 2 && (
+            <span className="w-7 h-7 rounded-[5px] bg-[#a5acb6] grid place-items-center text-white text-[10px]">
+              ⇧
+            </span>
+          )}
+          {row.map((k) => (
+            <span
+              key={k}
+              className="flex-1 max-w-[24px] h-7 rounded-[5px] bg-white grid place-items-center text-[11px] text-ink font-medium shadow-[0_1px_0_rgba(0,0,0,0.18)]"
+            >
+              {k}
+            </span>
+          ))}
+          {ri === 2 && (
+            <span className="w-7 h-7 rounded-[5px] bg-[#a5acb6] grid place-items-center text-white text-[10px]">
+              ⌫
+            </span>
+          )}
+        </div>
+      ))}
+      <div className="flex items-center gap-[3px]">
+        <span className="px-1.5 h-7 rounded-[5px] bg-[#a5acb6] grid place-items-center text-white text-[9px] font-semibold">
+          123
+        </span>
+        <motion.span
+          animate={
+            globeHighlighted
+              ? { scale: [1, 1.18, 1.1], boxShadow: '0 0 0 6px rgba(0,82,255,0.18)' }
+              : { scale: 1, boxShadow: '0 0 0 0px rgba(0,82,255,0)' }
+          }
+          transition={{ duration: 0.6 }}
+          className={`w-8 h-7 rounded-[5px] grid place-items-center text-[12px] ${
+            globeHighlighted ? 'bg-brand text-white' : 'bg-[#a5acb6] text-white'
+          }`}
+          aria-label="Globe — switch keyboard"
+        >
+          🌐
+        </motion.span>
+        <span className="flex-1 h-7 rounded-[5px] bg-white grid place-items-center text-[10px] text-ink/60 font-medium">
+          space
+        </span>
+        <span className="px-3 h-7 rounded-[5px] bg-brand grid place-items-center text-white text-[10px] font-semibold">
+          return
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function KeyboardSwitcher() {
+  const items = [
+    { label: 'English (US)', sub: 'Standard', emoji: 'A', active: false },
+    { label: 'Emoji', sub: 'Standard', emoji: '😊', active: false },
+    { label: 'amwali pay', sub: 'Send money in chat', emoji: '●', active: true, brand: true },
+    { label: 'Arabic', sub: 'Standard', emoji: 'ع', active: false },
+  ]
   return (
     <motion.div
-      initial={{ y: 20, opacity: 0 }}
+      initial={{ y: 16, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 20, opacity: 0 }}
+      exit={{ y: 16, opacity: 0 }}
+      transition={{ duration: 0.22 }}
+      className="absolute bottom-2 left-2 right-2 rounded-2xl bg-white/95 backdrop-blur shadow-2xl overflow-hidden border border-ink/5"
+    >
+      <div className="px-3 py-2 text-[10px] text-ink/50 uppercase tracking-wider font-semibold border-b border-ink/5 bg-off-white">
+        Choose Keyboard
+      </div>
+      <ul>
+        {items.map((it) => (
+          <li
+            key={it.label}
+            className={`flex items-center gap-3 px-3 py-2.5 border-b border-ink/5 last:border-b-0 ${
+              it.active ? 'bg-brand-pale' : 'bg-white'
+            }`}
+          >
+            <span
+              className={`w-7 h-7 rounded-md grid place-items-center text-xs font-bold ${
+                it.brand
+                  ? 'bg-brand text-white'
+                  : 'bg-ink/8 text-ink'
+              }`}
+              style={!it.brand ? { backgroundColor: 'rgba(10,14,39,0.08)' } : undefined}
+            >
+              {it.emoji}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div
+                className={`text-[12px] font-semibold ${
+                  it.active ? 'text-brand' : 'text-ink'
+                }`}
+              >
+                {it.label}
+              </div>
+              <div className="text-[10px] text-ink/55 truncate">{it.sub}</div>
+            </div>
+            {it.active && (
+              <span className="text-brand text-base leading-none" aria-hidden>
+                ✓
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </motion.div>
+  )
+}
+
+function AmwaliKeypad({
+  typed,
+  details,
+}: {
+  typed: string
+  details: PaymentDetails
+}) {
+  const displayAmount =
+    typed && typed !== '0'
+      ? formatCurrency(Number(typed), details.currency)
+      : `${details.currency === 'USD' ? '$' : details.currency + ' '}0`
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫']
+  return (
+    <motion.div
+      initial={{ y: 18, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 18, opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="absolute bottom-12 left-2 right-2 rounded-2xl bg-navy shadow-2xl p-3 text-white border border-gold/30"
+      className="absolute bottom-0 left-0 right-0 bg-ink text-white p-3"
+      style={{ borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <span className="w-6 h-6 rounded-full bg-gold grid place-items-center text-navy font-bold text-xs">
-            ✦
+          <span className="w-5 h-5 rounded-full bg-brand grid place-items-center text-white text-[9px] font-bold">
+            ●
           </span>
-          <span className="text-[11px] font-semibold">
-            <span lang="ar" dir="rtl" className="font-arabic text-gold italic">
-              أموالي
-            </span>
-            <span className="ml-1">pay</span>
-          </span>
+          <span className="text-[10px] font-semibold tracking-wide">amwali pay</span>
         </div>
-        <span className="text-[9px] text-white/60 uppercase tracking-wider">Send link</span>
+        <span className="text-[9px] text-white/60 uppercase tracking-wider">
+          Enter amount
+        </span>
       </div>
 
-      <div className="rounded-xl bg-navy-mid/80 p-2.5 border border-white/5">
-        <div className="text-[9px] text-white/50 uppercase tracking-wider">Amount</div>
+      <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 mb-2">
+        <div className="text-[9px] uppercase tracking-wider text-white/40">Amount</div>
         <div className="flex items-baseline justify-between mt-0.5">
-          <div className="text-xl font-bold">{formatCurrency(details.amount, details.currency)}</div>
-          <div className="text-[10px] text-gold">{details.equivalentText}</div>
+          <div className="text-xl font-bold tabular-nums">{displayAmount}</div>
+          <div className="text-[10px] text-brand-light">{details.equivalentText}</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mt-2">
-        <button className="rounded-lg border border-white/15 text-white text-[10px] py-1.5 font-medium">
-          Cancel
-        </button>
-        <button className="rounded-lg bg-gold text-navy text-[10px] py-1.5 font-semibold">
-          Send link →
-        </button>
+      <div className="grid grid-cols-3 gap-1.5">
+        {keys.map((k) => (
+          <div
+            key={k}
+            className="h-9 rounded-lg bg-white/8 text-white grid place-items-center text-base font-medium border border-white/8"
+          >
+            {k}
+          </div>
+        ))}
+      </div>
+
+      <button className="mt-2 w-full h-10 rounded-lg bg-brand text-white text-[12px] font-semibold flex items-center justify-center gap-2">
+        <span className="w-4 h-4 rounded grid place-items-center bg-white/15 text-[9px]" aria-hidden>
+          ⓘ
+        </span>
+        Send link · Confirm with Face ID
+      </button>
+    </motion.div>
+  )
+}
+
+function FaceIdOverlay({ success }: { success: boolean }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="absolute inset-0 z-40 grid place-items-center bg-ink/85 backdrop-blur-sm"
+    >
+      <div className="text-center text-white px-6">
+        <div className="relative w-24 h-24 mx-auto">
+          {!success && (
+            <span
+              className="absolute inset-0 rounded-full border border-brand/40 pulse-ring"
+              aria-hidden
+            />
+          )}
+          <div className="absolute inset-0 rounded-full border-2 border-brand grid place-items-center bg-ink/60 overflow-hidden">
+            {success ? (
+              <motion.svg
+                initial={{ scale: 0, rotate: -10 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 16 }}
+                width="42"
+                height="42"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M4 12l5 5L20 6"
+                  stroke="#0052FF"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </motion.svg>
+            ) : (
+              <>
+                <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
+                  <rect x="6" y="6" width="18" height="3" fill="#4D85FF" />
+                  <rect x="6" y="6" width="3" height="18" fill="#4D85FF" />
+                  <rect x="40" y="6" width="18" height="3" fill="#4D85FF" />
+                  <rect x="55" y="6" width="3" height="18" fill="#4D85FF" />
+                  <rect x="6" y="55" width="18" height="3" fill="#4D85FF" />
+                  <rect x="6" y="40" width="3" height="18" fill="#4D85FF" />
+                  <rect x="40" y="55" width="18" height="3" fill="#4D85FF" />
+                  <rect x="55" y="40" width="3" height="18" fill="#4D85FF" />
+                  <circle cx="24" cy="28" r="2" fill="#4D85FF" />
+                  <circle cx="40" cy="28" r="2" fill="#4D85FF" />
+                  <path
+                    d="M22 40 Q32 48 42 40"
+                    stroke="#4D85FF"
+                    strokeWidth="2"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-x-0 top-0 h-1 bg-brand face-scan-line" />
+              </>
+            )}
+          </div>
+        </div>
+        <motion.div
+          key={success ? 'ok' : 'scan'}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="mt-5"
+        >
+          <div className={`text-sm font-semibold ${success ? 'text-brand-light' : 'text-white'}`}>
+            {success ? 'Authenticated' : 'Scanning Face ID…'}
+          </div>
+          <div className="text-[11px] text-white/55 mt-1">
+            {success ? 'Sending payment link' : 'Hold still'}
+          </div>
+        </motion.div>
       </div>
     </motion.div>
   )
@@ -141,7 +359,12 @@ export function PhoneMockup({
   const equivalentAmount =
     _currency === 'USD'
       ? fromUSD(usdAmount, otherCurrency)
-      : usdAmount * (otherCurrency === 'USD' ? 1 : market === 'lb' ? RATES.LBP_PER_USD : RATES.AED_PER_USD)
+      : usdAmount *
+        (otherCurrency === 'USD'
+          ? 1
+          : market === 'lb'
+            ? RATES.LBP_PER_USD
+            : RATES.AED_PER_USD)
   const equivalentText = `≈ ${formatCurrency(equivalentAmount, otherCurrency)}`
 
   const state = useChatSimulation({
@@ -171,15 +394,17 @@ export function PhoneMockup({
       aria-label={`${m.name} chat demonstration`}
     >
       <div
-        className="relative rounded-[36px] bg-navy p-[10px] shadow-2xl"
-        style={{ boxShadow: '0 30px 60px -15px rgba(10,22,40,0.45), 0 0 0 1px rgba(255,255,255,0.04)' }}
+        className="relative rounded-[36px] bg-ink p-[10px] shadow-2xl"
+        style={{
+          boxShadow: '0 30px 60px -15px rgba(10, 14, 39, 0.4), 0 0 0 1px rgba(255,255,255,0.04)',
+        }}
       >
         {/* Notch */}
-        <div className="absolute top-[14px] left-1/2 -translate-x-1/2 w-24 h-5 rounded-full bg-navy z-30" />
+        <div className="absolute top-[14px] left-1/2 -translate-x-1/2 w-24 h-5 rounded-full bg-ink z-30" />
 
-        <div className="relative rounded-[28px] overflow-hidden bg-[#f0f0f0]" style={{ height: 560 }}>
+        <div className="relative rounded-[28px] overflow-hidden bg-[#f0f0f0]" style={{ height: 600 }}>
           {/* Status bar */}
-          <div className="h-7 bg-navy flex items-center justify-between px-5 text-white text-[11px] font-semibold">
+          <div className="h-7 bg-ink flex items-center justify-between px-5 text-white text-[11px] font-semibold">
             <span>9:41</span>
             <div className="flex items-center gap-1">
               <span className="text-[10px]">●●●</span>
@@ -189,8 +414,8 @@ export function PhoneMockup({
           </div>
 
           {/* App header */}
-          <div className="bg-white border-b border-black/5 px-3 py-2 flex items-center gap-2">
-            <button aria-label="Back" className="text-navy/60 text-base px-1">
+          <div className="bg-white border-b border-ink/5 px-3 py-2 flex items-center gap-2">
+            <button aria-label="Back" className="text-ink/60 text-base px-1">
               ‹
             </button>
             <div
@@ -200,10 +425,12 @@ export function PhoneMockup({
               {m.chatContact.initials}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-semibold text-navy truncate">{m.chatContact.name}</div>
-              <div className="text-[10px] text-green-600">online</div>
+              <div className="text-[13px] font-semibold text-ink truncate">
+                {m.chatContact.name}
+              </div>
+              <div className="text-[10px] text-emerald-600">online</div>
             </div>
-            <div className="flex items-center gap-2 text-navy/50">
+            <div className="flex items-center gap-2 text-ink/45">
               <span className="text-base" aria-hidden>
                 📹
               </span>
@@ -216,7 +443,7 @@ export function PhoneMockup({
           {/* Chat area */}
           <div
             className="chat-bg overflow-hidden px-3 py-3 flex flex-col gap-2 relative"
-            style={{ height: 'calc(100% - 28px - 48px - 56px)' }}
+            style={{ height: 'calc(100% - 28px - 48px)' }}
           >
             <AnimatePresence initial={false}>
               {state.messages.map((msg) => (
@@ -232,11 +459,17 @@ export function PhoneMockup({
                   ) : (
                     <div
                       className={`max-w-[78%] px-3 py-2 rounded-2xl text-[12px] leading-snug shadow-sm ${
-                        msg.side === 'me' ? 'bg-[#dcf8c6] text-navy' : 'bg-white text-navy'
+                        msg.side === 'me'
+                          ? 'bg-brand text-white'
+                          : 'bg-white text-ink'
                       }`}
                     >
                       {msg.text}
-                      <div className="text-[9px] text-navy/40 text-right mt-0.5">
+                      <div
+                        className={`text-[9px] text-right mt-0.5 ${
+                          msg.side === 'me' ? 'text-white/55' : 'text-ink/40'
+                        }`}
+                      >
                         9:41 {msg.side === 'me' ? '✓✓' : ''}
                       </div>
                     </div>
@@ -254,7 +487,7 @@ export function PhoneMockup({
               >
                 <div
                   className={`px-3 py-2 rounded-2xl shadow-sm ${
-                    state.showTyping === 'me' ? 'bg-[#dcf8c6]' : 'bg-white'
+                    state.showTyping === 'me' ? 'bg-brand-pale' : 'bg-white'
                   }`}
                 >
                   <TypingDots />
@@ -262,68 +495,68 @@ export function PhoneMockup({
               </motion.div>
             )}
 
-            <AnimatePresence>{state.showKeyboard && <KeyboardPopup details={paymentDetails} />}</AnimatePresence>
+            {/* Keyboard layers */}
+            <AnimatePresence>
+              {state.showQwerty &&
+                !state.showAmwaliKeypad &&
+                !state.showSwitcher && (
+                  <motion.div
+                    key="qwerty"
+                    initial={{ y: 200, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 200, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    className="absolute bottom-0 left-0 right-0"
+                  >
+                    <QwertyKeyboard globeHighlighted={state.globeHighlighted} />
+                  </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {state.showSwitcher && (
+                <KeyboardSwitcher key="switcher" />
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {state.showAmwaliKeypad && (
+                <AmwaliKeypad
+                  key="amwali"
+                  typed={state.typedDigits}
+                  details={paymentDetails}
+                />
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {state.showFaceId && <FaceIdOverlay success={state.faceIdSuccess} />}
+            </AnimatePresence>
           </div>
 
-          {/* Bottom message input */}
-          <div className="absolute bottom-14 left-0 right-0 bg-[#f0f0f0] px-3 py-2 flex items-center gap-2 border-t border-black/5">
-            <span className="text-navy/40 text-lg">😊</span>
-            <div className="flex-1 bg-white rounded-full px-3 py-1.5 text-[11px] text-navy/40">
-              Message
-            </div>
-            <button
-              aria-label="Open Amwali"
-              className="w-8 h-8 rounded-full bg-navy grid place-items-center text-gold text-sm"
-            >
-              ✦
-            </button>
-            <span className="text-navy/40 text-lg">🎤</span>
-          </div>
-
-          {/* Bottom keyboard / app tray */}
-          <div className="absolute bottom-0 left-0 right-0 h-14 bg-white border-t border-black/5 px-3 flex items-center justify-around">
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="w-7 h-7 rounded-full bg-navy grid place-items-center text-gold text-xs font-bold">
-                ✦
+          {/* Bottom message input — fixed at the absolute bottom only when no keyboard is shown */}
+          {!state.showQwerty && !state.showAmwaliKeypad && (
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-[#f0f0f0] px-3 py-2 flex items-center gap-2 border-t border-ink/5">
+              <span className="text-ink/40 text-lg">😊</span>
+              <div className="flex-1 bg-white rounded-full px-3 py-1.5 text-[11px] text-ink/40">
+                Message
               </div>
-              <span className="text-[8px] text-navy/60 font-medium">
-                <span lang="ar" dir="rtl" className="font-arabic">
-                  أموالي
-                </span>
-              </span>
+              <button
+                aria-label="Open Amwali"
+                className="w-8 h-8 rounded-full bg-brand grid place-items-center text-white text-sm"
+              >
+                ●
+              </button>
+              <span className="text-ink/40 text-lg">🎤</span>
             </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="w-7 h-7 rounded-full bg-[#25D366] grid place-items-center text-white text-xs">
-                W
-              </div>
-              <span className="text-[8px] text-navy/60">{platform}</span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 grid place-items-center text-white text-xs">
-                I
-              </div>
-              <span className="text-[8px] text-navy/60">Insta</span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="w-7 h-7 rounded-full bg-blue-500 grid place-items-center text-white text-xs">
-                T
-              </div>
-              <span className="text-[8px] text-navy/60">Telegram</span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="w-7 h-7 rounded-full bg-navy/10 grid place-items-center text-navy text-xs">
-                ⋯
-              </div>
-              <span className="text-[8px] text-navy/60">More</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Side buttons */}
-      <div className="absolute top-24 -left-[3px] w-1 h-12 bg-navy rounded-l-md" aria-hidden />
-      <div className="absolute top-40 -left-[3px] w-1 h-20 bg-navy rounded-l-md" aria-hidden />
-      <div className="absolute top-32 -right-[3px] w-1 h-20 bg-navy rounded-r-md" aria-hidden />
+      <div className="absolute top-24 -left-[3px] w-1 h-12 bg-ink rounded-l-md" aria-hidden />
+      <div className="absolute top-40 -left-[3px] w-1 h-20 bg-ink rounded-l-md" aria-hidden />
+      <div className="absolute top-32 -right-[3px] w-1 h-20 bg-ink rounded-r-md" aria-hidden />
     </motion.div>
   )
 }

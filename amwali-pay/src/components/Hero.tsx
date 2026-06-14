@@ -30,12 +30,12 @@ export function Hero() {
         className="pointer-events-none absolute inset-0 z-0"
         style={{
           background:
-            'radial-gradient(circle at 80% 90%, rgba(201,153,43,0.07), transparent 55%), radial-gradient(circle at 10% 0%, rgba(10,22,40,0.04), transparent 50%)',
+            'radial-gradient(circle at 85% 90%, rgba(0, 82, 255, 0.06), transparent 55%), radial-gradient(circle at 10% 0%, rgba(0, 82, 255, 0.04), transparent 50%)',
         }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-0 right-0 w-[420px] h-[420px] gold-radial opacity-70 z-0"
+        className="pointer-events-none absolute bottom-0 right-0 w-[420px] h-[420px] blue-radial opacity-70 z-0"
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
@@ -47,50 +47,41 @@ export function Hero() {
         >
           <motion.span
             variants={itemVariants}
-            className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold-pale px-3.5 py-1.5 text-xs font-medium text-navy/80"
+            className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand-pale px-3.5 py-1.5 text-xs font-medium text-brand"
           >
-            <span className="text-gold">✦</span>
-            Chat-native payments for MENA
+            <span className="w-1.5 h-1.5 rounded-full bg-brand" />
+            Chat-native payments for banks &amp; fintechs
           </motion.span>
 
           <motion.h1
             variants={itemVariants}
-            className="mt-5 text-4xl sm:text-5xl lg:text-[52px] font-bold tracking-tight leading-[1.05] text-navy"
+            className="mt-5 text-4xl sm:text-5xl lg:text-[52px] font-bold tracking-tight leading-[1.05] text-ink"
           >
             Turn every conversation into a
             <br />
-            <span className="text-gold">payment</span> moment
+            <span className="text-brand">payment</span> moment
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            lang="ar"
-            dir="rtl"
-            className="font-arabic text-lg text-navy/60 mt-4"
-          >
-            أموالك في كل محادثة
-          </motion.p>
-
-          <motion.p
-            variants={itemVariants}
-            className="mt-6 text-[17px] leading-relaxed text-navy/70"
+            className="mt-6 text-[17px] leading-relaxed text-ink/65"
           >
             Amwali Pay is a white-label payment SDK that lives inside the chat apps your
-            customers already use. Supports USD and LBP across Lebanon, AED across the UAE,
-            and settles via the fastest local rail every time.
+            customers already use. Multi-currency. One tap. Face ID secured. Settles via
+            the fastest local rail every time.
           </motion.p>
 
           <motion.div variants={itemVariants} className="mt-8 flex flex-wrap gap-3">
             <a
               href="#demo"
-              className="inline-flex items-center gap-2 rounded-full bg-navy text-white px-6 py-3 text-sm font-medium hover:bg-navy-mid transition-colors"
+              className="inline-flex items-center gap-2 rounded-full bg-brand text-white px-6 py-3 text-sm font-semibold hover:bg-brand-deep transition-colors shadow-md shadow-brand/25"
             >
               Try live demo
               <span aria-hidden>→</span>
             </a>
             <a
               href="#features"
-              className="inline-flex items-center gap-2 rounded-full border border-navy/15 text-navy px-6 py-3 text-sm font-medium hover:border-navy/40 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full border border-ink/15 text-ink px-6 py-3 text-sm font-semibold hover:border-brand hover:text-brand transition-colors"
             >
               Learn more
             </a>
@@ -107,10 +98,10 @@ export function Hero() {
               <motion.div
                 key={s.value}
                 variants={itemVariants}
-                className="inline-flex items-center gap-2 rounded-full bg-white border border-navy/10 px-3.5 py-1.5 text-[12px] text-navy/80 shadow-sm"
+                className="inline-flex items-center gap-2 rounded-full bg-white border border-border px-3.5 py-1.5 text-[12px] text-ink/80 shadow-sm"
               >
-                <span className="font-bold text-navy">{s.value}</span>
-                <span className="text-navy/55">{s.label}</span>
+                <span className="font-bold text-brand">{s.value}</span>
+                <span className="text-ink/55">{s.label}</span>
               </motion.div>
             ))}
           </motion.div>
