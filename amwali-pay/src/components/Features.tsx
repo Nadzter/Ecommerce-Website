@@ -10,48 +10,55 @@ import {
 } from 'framer-motion'
 import { FEATURES } from '@/lib/constants'
 
-interface FeatureRowProps {
+interface PanelProps {
   index: number
+  total: number
   scrollYProgress: MotionValue<number>
   feature: (typeof FEATURES)[number]
+  prefersReduced: boolean | null
 }
 
-function FeatureRow({ index, scrollYProgress, feature }: FeatureRowProps) {
-  const prefersReduced = useReducedMotion()
-  const total = FEATURES.length
-  const span = 1 / total
-  const start = index * span
-  const end = start + span
-
-  const padStart = Math.max(0, start - span * 0.4)
-  const padEnd = Math.min(1, end + span * 0.4)
+function useFeatureMotion(
+  index: number,
+  total: number,
+  scrollYProgress: MotionValue<number>,
+  prefersReduced: boolean | null,
+) {
+  const peak = total > 1 ? index / (total - 1) : 0.5
+  const reach = total > 1 ? 1 / (total - 1) : 1
 
   const opacity = useTransform(
     scrollYProgress,
-    prefersReduced ? [0, 1] : [padStart, start + span * 0.2, end - span * 0.2, padEnd],
-    prefersReduced ? [1, 1] : [0.18, 1, 1, 0.18],
+    prefersReduced ? [0, 1] : [peak - reach, peak, peak + reach],
+    prefersReduced ? [1, 1] : [0, 1, 0],
   )
   const y = useTransform(
     scrollYProgress,
-    prefersReduced ? [0, 1] : [padStart, start + span * 0.2, end - span * 0.2, padEnd],
-    prefersReduced ? [0, 0] : [40, 0, 0, -40],
+    prefersReduced ? [0, 1] : [peak - reach, peak, peak + reach],
+    prefersReduced ? [0, 0] : [30, 0, -30],
   )
   const scale = useTransform(
     scrollYProgress,
-    prefersReduced ? [0, 1] : [padStart, start + span * 0.5, padEnd],
-    prefersReduced ? [1, 1] : [0.96, 1, 0.96],
+    prefersReduced ? [0, 1] : [peak - reach, peak, peak + reach],
+    prefersReduced ? [1, 1] : [0.94, 1, 0.94],
   )
 
+  return { opacity, y, scale }
+}
+
+function FeatureCopy({ index, total, scrollYProgress, feature, prefersReduced }: PanelProps) {
+  const { opacity, y } = useFeatureMotion(index, total, scrollYProgress, prefersReduced)
   return (
     <motion.div
-      style={{ opacity, y, scale }}
+      style={{ opacity, y }}
       className="absolute inset-0 flex items-center"
+      aria-hidden={index !== 0}
     >
       <div className="w-full">
         <div className="text-xs uppercase tracking-[0.2em] text-brand font-semibold mb-3">
-          0{index + 1} · Capability
+          {String(index + 1).padStart(2, '0')} · Capability
         </div>
-        <h3 className="text-3xl sm:text-4xl lg:text-[44px] font-bold text-ink leading-tight tracking-tight">
+        <h3 className="text-3xl sm:text-4xl lg:text-[44px] font-bold text-ink leading-[1.05] tracking-tight">
           {feature.titleEn}
         </h3>
         <p className="mt-5 text-[17px] text-ink/65 leading-relaxed max-w-md">
@@ -62,59 +69,28 @@ function FeatureRow({ index, scrollYProgress, feature }: FeatureRowProps) {
   )
 }
 
-interface FeatureVisualProps {
-  index: number
-  scrollYProgress: MotionValue<number>
-  feature: (typeof FEATURES)[number]
-}
-
-function FeatureVisual({ index, scrollYProgress, feature }: FeatureVisualProps) {
-  const prefersReduced = useReducedMotion()
-  const total = FEATURES.length
-  const span = 1 / total
-  const start = index * span
-  const end = start + span
-  const mid = start + span / 2
-
-  const opacity = useTransform(
-    scrollYProgress,
-    prefersReduced ? [0, 1] : [start, mid, end],
-    prefersReduced ? [1, 1, 1] : [0, 1, 0],
-  )
-  const scale = useTransform(
-    scrollYProgress,
-    prefersReduced ? [0, 1] : [start, mid, end],
-    prefersReduced ? [1, 1, 1] : [0.86, 1, 0.86],
-  )
-  const rotate = useTransform(
-    scrollYProgress,
-    prefersReduced ? [0, 1] : [start, end],
-    prefersReduced ? [0, 0] : [-4, 4],
-  )
-
+function FeatureVisual({ index, total, scrollYProgress, feature, prefersReduced }: PanelProps) {
+  const { opacity, scale } = useFeatureMotion(index, total, scrollYProgress, prefersReduced)
   return (
     <motion.div
-      style={{ opacity, scale, rotate }}
+      style={{ opacity, scale }}
       className="absolute inset-0 flex items-center justify-center"
+      aria-hidden
     >
       <div className="relative w-full max-w-[420px] aspect-square">
         <div
           aria-hidden
-          className="absolute inset-0 rounded-[36px] bg-gradient-to-br from-brand-pale to-white border border-brand/15 shadow-[0_30px_80px_-30px_rgba(0,82,255,0.4)]"
+          className="absolute inset-0 rounded-[36px] bg-gradient-to-br from-brand-pale to-white border border-brand/15 shadow-[0_30px_80px_-30px_rgba(0,82,255,0.35)]"
         />
         <div
           aria-hidden
-          className="absolute inset-6 rounded-[28px] border border-brand/15 blue-radial opacity-50"
+          className="absolute inset-6 rounded-[28px] border border-brand/10 blue-radial opacity-50"
         />
         <div className="absolute inset-0 grid place-items-center">
           <div className="text-center">
             <motion.div
-              className="w-32 h-32 mx-auto rounded-full bg-white border border-brand/15 grid place-items-center text-6xl shadow-xl"
-              animate={
-                prefersReduced
-                  ? {}
-                  : { y: [0, -8, 0] }
-              }
+              className="w-32 h-32 mx-auto rounded-full bg-white border border-brand/20 grid place-items-center text-6xl shadow-xl"
+              animate={prefersReduced ? {} : { y: [0, -8, 0] }}
               transition={{ duration: 4, ease: 'easeInOut', repeat: Infinity }}
             >
               <span aria-hidden>{feature.icon}</span>
@@ -132,6 +108,31 @@ function FeatureVisual({ index, scrollYProgress, feature }: FeatureVisualProps) 
   )
 }
 
+interface IndicatorProps {
+  index: number
+  total: number
+  scrollYProgress: MotionValue<number>
+  prefersReduced: boolean | null
+}
+
+function Indicator({ index, total, scrollYProgress, prefersReduced }: IndicatorProps) {
+  const peak = total > 1 ? index / (total - 1) : 0.5
+  const reach = total > 1 ? 1 / (total - 1) : 1
+  const activeness = useTransform(
+    scrollYProgress,
+    prefersReduced ? [0, 1] : [peak - reach, peak, peak + reach],
+    prefersReduced ? [0, 1] : [0, 1, 0],
+  )
+  const width = useTransform(activeness, (v) => `${28 + v * 16}px`)
+  const bg = useTransform(activeness, (v) => {
+    const r = Math.round(208 - v * 208)
+    const g = Math.round(216 - v * 134)
+    const b = Math.round(232 - v * (232 - 255))
+    return `rgb(${r}, ${g}, ${b})`
+  })
+  return <motion.span className="block h-1.5 rounded-full" style={{ width, backgroundColor: bg }} />
+}
+
 export function Features() {
   const prefersReduced = useReducedMotion()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -140,16 +141,13 @@ export function Features() {
     offset: ['start start', 'end end'],
   })
 
-  // Sticky scroll height: one viewport per feature
-  const sectionHeight = `calc(${FEATURES.length} * 100vh)`
+  const total = FEATURES.length
+  // Container height: 1 viewport for the pinned area + (n-1) viewports of scrolling = 1 viewport per transition
+  const sectionHeight = `${total * 100}vh`
 
   return (
     <section id="features" className="bg-off-white">
-      <div
-        ref={containerRef}
-        className="relative"
-        style={{ height: sectionHeight }}
-      >
+      <div ref={containerRef} className="relative" style={{ height: sectionHeight }}>
         <div className="sticky top-0 h-screen overflow-hidden flex flex-col">
           <div className="max-w-7xl mx-auto w-full px-5 sm:px-8 lg:px-12 pt-24 pb-8">
             <div className="flex items-end justify-between flex-wrap gap-3">
@@ -166,8 +164,9 @@ export function Features() {
                   <Indicator
                     key={i}
                     index={i}
-                    total={FEATURES.length}
+                    total={total}
                     scrollYProgress={scrollYProgress}
+                    prefersReduced={prefersReduced}
                   />
                 ))}
               </div>
@@ -178,11 +177,13 @@ export function Features() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center h-full">
               <div className="relative h-[360px] sm:h-[420px] lg:h-[440px] order-2 lg:order-1">
                 {FEATURES.map((f, i) => (
-                  <FeatureRow
+                  <FeatureCopy
                     key={f.titleEn}
                     index={i}
+                    total={total}
                     scrollYProgress={scrollYProgress}
                     feature={f}
+                    prefersReduced={prefersReduced}
                   />
                 ))}
               </div>
@@ -191,8 +192,10 @@ export function Features() {
                   <FeatureVisual
                     key={f.titleEn}
                     index={i}
+                    total={total}
                     scrollYProgress={scrollYProgress}
                     feature={f}
+                    prefersReduced={prefersReduced}
                   />
                 ))}
               </div>
@@ -200,49 +203,6 @@ export function Features() {
           </div>
         </div>
       </div>
-      {/* Mobile fallback: simple list rendered below the sticky scroll on small screens for accessibility */}
-      <noscript>
-        <ul className="max-w-3xl mx-auto px-5 py-10 space-y-6">
-          {FEATURES.map((f) => (
-            <li key={f.titleEn} className="rounded-2xl bg-white border border-border p-6">
-              <div className="text-3xl">{f.icon}</div>
-              <h3 className="mt-3 font-bold text-ink">{f.titleEn}</h3>
-              <p className="mt-2 text-sm text-ink/65">{f.body}</p>
-            </li>
-          ))}
-        </ul>
-      </noscript>
-      {/* Keep prefersReduced from being flagged as unused in static analysis. */}
-      <span hidden aria-hidden>{prefersReduced ? '' : ''}</span>
     </section>
-  )
-}
-
-interface IndicatorProps {
-  index: number
-  total: number
-  scrollYProgress: MotionValue<number>
-}
-
-function Indicator({ index, total, scrollYProgress }: IndicatorProps) {
-  const prefersReduced = useReducedMotion()
-  const span = 1 / total
-  const start = index * span
-  const end = start + span
-  const width = useTransform(
-    scrollYProgress,
-    prefersReduced ? [0, 1] : [start, end],
-    prefersReduced ? ['28px', '28px'] : ['28px', '40px'],
-  )
-  const bg = useTransform(
-    scrollYProgress,
-    prefersReduced ? [0, 1] : [start - 0.05, start, end, end + 0.05],
-    prefersReduced ? ['#0052FF', '#0052FF'] : ['#D0D8E8', '#0052FF', '#0052FF', '#D0D8E8'],
-  )
-  return (
-    <motion.span
-      className="block h-1.5 rounded-full"
-      style={{ width, backgroundColor: bg }}
-    />
   )
 }
