@@ -259,79 +259,98 @@ function AmwaliKeypad({
 }
 
 function FaceIdOverlay({ success }: { success: boolean }) {
+  // iOS-style Face ID widget: small face icon near the Dynamic Island area,
+  // green during scan, morphing into a green checkmark on success.
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="absolute inset-0 z-40 grid place-items-center bg-ink/85 backdrop-blur-sm"
+      className="absolute inset-0 z-40 bg-ink/35 backdrop-blur-[2px]"
     >
-      <div className="text-center text-white px-6">
-        <div className="relative w-24 h-24 mx-auto">
+      {/* Centered widget high up near the selfie camera */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-4 text-center">
+        <motion.div
+          key={success ? 'ok' : 'scan'}
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 280, damping: 18 }}
+          className="relative w-14 h-14 mx-auto"
+        >
           {!success && (
             <span
-              className="absolute inset-0 rounded-full border border-brand/40 pulse-ring"
+              className="absolute inset-0 rounded-full bg-emerald-400/25 pulse-ring"
               aria-hidden
             />
           )}
-          <div className="absolute inset-0 rounded-full border-2 border-brand grid place-items-center bg-ink/60 overflow-hidden">
+          <div
+            className="absolute inset-0 rounded-full grid place-items-center shadow-lg"
+            style={{
+              background: success
+                ? 'linear-gradient(135deg,#22C55E,#16A34A)'
+                : 'linear-gradient(135deg,#22C55E,#15803D)',
+              boxShadow: success
+                ? '0 0 24px rgba(34,197,94,0.7)'
+                : '0 0 18px rgba(34,197,94,0.5)',
+            }}
+          >
             {success ? (
               <motion.svg
-                initial={{ scale: 0, rotate: -10 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 16 }}
-                width="42"
-                height="42"
+                initial={{ pathLength: 0, scale: 0.7 }}
+                animate={{ pathLength: 1, scale: 1 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                width="28"
+                height="28"
                 viewBox="0 0 24 24"
                 fill="none"
               >
-                <path
-                  d="M4 12l5 5L20 6"
-                  stroke="#0052FF"
+                <motion.path
+                  d="M5 12l5 5L20 7"
+                  stroke="white"
                   strokeWidth="3"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.45, ease: 'easeOut' }}
                 />
               </motion.svg>
             ) : (
-              <>
-                <svg width="48" height="48" viewBox="0 0 64 64" fill="none">
-                  <rect x="6" y="6" width="18" height="3" fill="#4D85FF" />
-                  <rect x="6" y="6" width="3" height="18" fill="#4D85FF" />
-                  <rect x="40" y="6" width="18" height="3" fill="#4D85FF" />
-                  <rect x="55" y="6" width="3" height="18" fill="#4D85FF" />
-                  <rect x="6" y="55" width="18" height="3" fill="#4D85FF" />
-                  <rect x="6" y="40" width="3" height="18" fill="#4D85FF" />
-                  <rect x="40" y="55" width="18" height="3" fill="#4D85FF" />
-                  <rect x="55" y="40" width="3" height="18" fill="#4D85FF" />
-                  <circle cx="24" cy="28" r="2" fill="#4D85FF" />
-                  <circle cx="40" cy="28" r="2" fill="#4D85FF" />
-                  <path
-                    d="M22 40 Q32 48 42 40"
-                    stroke="#4D85FF"
-                    strokeWidth="2"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <div className="absolute inset-x-0 top-0 h-1 bg-brand face-scan-line" />
-              </>
+              <svg width="30" height="30" viewBox="0 0 64 64" fill="none" aria-hidden>
+                <rect x="6" y="6" width="14" height="3" rx="1.5" fill="white" />
+                <rect x="6" y="6" width="3" height="14" rx="1.5" fill="white" />
+                <rect x="44" y="6" width="14" height="3" rx="1.5" fill="white" />
+                <rect x="55" y="6" width="3" height="14" rx="1.5" fill="white" />
+                <rect x="6" y="55" width="14" height="3" rx="1.5" fill="white" />
+                <rect x="6" y="44" width="3" height="14" rx="1.5" fill="white" />
+                <rect x="44" y="55" width="14" height="3" rx="1.5" fill="white" />
+                <rect x="55" y="44" width="3" height="14" rx="1.5" fill="white" />
+                <circle cx="24" cy="28" r="2.2" fill="white" />
+                <circle cx="40" cy="28" r="2.2" fill="white" />
+                <path
+                  d="M22 40 Q32 48 42 40"
+                  stroke="white"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              </svg>
             )}
           </div>
-        </div>
+        </motion.div>
         <motion.div
-          key={success ? 'ok' : 'scan'}
-          initial={{ opacity: 0, y: 6 }}
+          key={`${success ? 'ok' : 'scan'}-label`}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-          className="mt-5"
+          transition={{ duration: 0.22 }}
+          className="mt-2"
         >
-          <div className={`text-sm font-semibold ${success ? 'text-brand-light' : 'text-white'}`}>
-            {success ? 'Authenticated' : 'Scanning Face ID…'}
+          <div className="text-[11px] font-semibold text-white drop-shadow">
+            {success ? 'Payment authorized' : 'Face ID'}
           </div>
-          <div className="text-[11px] text-white/55 mt-1">
-            {success ? 'Sending payment link' : 'Hold still'}
+          <div className="text-[9px] text-white/70 mt-0.5">
+            {success ? 'Face ID ✓ · sending link' : 'Look at the camera'}
           </div>
         </motion.div>
       </div>
@@ -394,22 +413,49 @@ export function PhoneMockup({
       aria-label={`${m.name} chat demonstration`}
     >
       <div
-        className="relative rounded-[36px] bg-ink p-[10px] shadow-2xl"
+        className="relative rounded-[44px] p-[7px] shadow-2xl"
         style={{
-          boxShadow: '0 30px 60px -15px rgba(10, 14, 39, 0.4), 0 0 0 1px rgba(255,255,255,0.04)',
+          background:
+            'linear-gradient(135deg, #1f2438 0%, #0A0E27 38%, #0A0E27 60%, #2b3145 100%)',
+          boxShadow:
+            '0 30px 60px -15px rgba(10, 14, 39, 0.45), 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.05)',
         }}
       >
-        {/* Notch */}
-        <div className="absolute top-[14px] left-1/2 -translate-x-1/2 w-24 h-5 rounded-full bg-ink z-30" />
+        {/* Dynamic Island */}
+        <div
+          className="absolute top-[11px] left-1/2 -translate-x-1/2 w-[112px] h-[30px] rounded-full bg-black z-30 grid place-items-center"
+          aria-hidden
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-[#3a3a3a] mr-12" />
+          <span className="absolute right-3 w-2.5 h-2.5 rounded-full bg-[#1c1c1c] ring-1 ring-[#2a2a2a]" />
+        </div>
 
-        <div className="relative rounded-[28px] overflow-hidden bg-[#f0f0f0]" style={{ height: 600 }}>
-          {/* Status bar */}
-          <div className="h-7 bg-ink flex items-center justify-between px-5 text-white text-[11px] font-semibold">
-            <span>9:41</span>
-            <div className="flex items-center gap-1">
-              <span className="text-[10px]">●●●</span>
-              <span className="text-[10px]">📶</span>
-              <span className="text-[10px]">100%</span>
+        <div
+          className="relative rounded-[37px] overflow-hidden bg-[#f0f0f0]"
+          style={{ height: 600 }}
+        >
+          {/* Status bar — leaves space for the Dynamic Island */}
+          <div className="h-11 bg-ink flex items-center justify-between px-6 text-white text-[12px] font-semibold">
+            <span className="tabular-nums">9:41</span>
+            <div className="flex items-center gap-1.5">
+              <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor" aria-hidden>
+                <rect x="0" y="6" width="3" height="4" rx="0.5" />
+                <rect x="4" y="4" width="3" height="6" rx="0.5" />
+                <rect x="8" y="2" width="3" height="8" rx="0.5" />
+                <rect x="12" y="0" width="3" height="10" rx="0.5" />
+              </svg>
+              <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden>
+                <path
+                  d="M7 9C7 9 1 5.4 1 3a3 3 0 0 1 6 0 3 3 0 0 1 6 0c0 2.4-6 6-6 6Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span className="inline-flex items-center">
+                <span className="w-5 h-2.5 rounded-[3px] border border-white/85 grid place-items-center p-[1px]">
+                  <span className="block h-full w-full rounded-[1.5px] bg-white" />
+                </span>
+                <span className="w-0.5 h-1.5 bg-white/85 rounded-r-[1px]" />
+              </span>
             </div>
           </div>
 
@@ -443,7 +489,7 @@ export function PhoneMockup({
           {/* Chat area */}
           <div
             className="chat-bg overflow-hidden px-3 py-3 flex flex-col gap-2 relative"
-            style={{ height: 'calc(100% - 28px - 48px)' }}
+            style={{ height: 'calc(100% - 44px - 48px)' }}
           >
             <AnimatePresence initial={false}>
               {state.messages.map((msg) => (
@@ -553,10 +599,34 @@ export function PhoneMockup({
         </div>
       </div>
 
-      {/* Side buttons */}
-      <div className="absolute top-24 -left-[3px] w-1 h-12 bg-ink rounded-l-md" aria-hidden />
-      <div className="absolute top-40 -left-[3px] w-1 h-20 bg-ink rounded-l-md" aria-hidden />
-      <div className="absolute top-32 -right-[3px] w-1 h-20 bg-ink rounded-r-md" aria-hidden />
+      {/* Side buttons — iPhone 16/17 Pro Max layout */}
+      {/* Left: Action Button + volume up + volume down */}
+      <div
+        className="absolute top-[88px] -left-[3px] w-[3px] h-9 rounded-l-md"
+        style={{ background: 'linear-gradient(to right, #2b3145, #0A0E27)' }}
+        aria-hidden
+      />
+      <div
+        className="absolute top-[140px] -left-[3px] w-[3px] h-14 rounded-l-md"
+        style={{ background: 'linear-gradient(to right, #2b3145, #0A0E27)' }}
+        aria-hidden
+      />
+      <div
+        className="absolute top-[212px] -left-[3px] w-[3px] h-14 rounded-l-md"
+        style={{ background: 'linear-gradient(to right, #2b3145, #0A0E27)' }}
+        aria-hidden
+      />
+      {/* Right: side button + Camera Control */}
+      <div
+        className="absolute top-[120px] -right-[3px] w-[3px] h-20 rounded-r-md"
+        style={{ background: 'linear-gradient(to left, #2b3145, #0A0E27)' }}
+        aria-hidden
+      />
+      <div
+        className="absolute top-[228px] -right-[3px] w-[3px] h-9 rounded-r-md"
+        style={{ background: 'linear-gradient(to left, #2b3145, #0A0E27)' }}
+        aria-hidden
+      />
     </motion.div>
   )
 }
