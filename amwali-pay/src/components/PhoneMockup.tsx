@@ -413,51 +413,15 @@ export function PhoneMockup({
       aria-label={`${m.name} chat demonstration`}
     >
       <div
-        className="relative rounded-[44px] p-[7px] shadow-2xl"
+        className="relative rounded-[32px] overflow-hidden bg-[#f0f0f0]"
         style={{
-          background:
-            'linear-gradient(135deg, #1f2438 0%, #0A0E27 38%, #0A0E27 60%, #2b3145 100%)',
+          height: 600,
           boxShadow:
-            '0 30px 60px -15px rgba(10, 14, 39, 0.45), 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.05)',
+            '0 30px 60px -15px rgba(10, 14, 39, 0.28), 0 0 0 1px rgba(10, 14, 39, 0.06)',
         }}
       >
-        {/* Dynamic Island */}
-        <div
-          className="absolute top-[11px] left-1/2 -translate-x-1/2 w-[112px] h-[30px] rounded-full bg-black z-30 grid place-items-center"
-          aria-hidden
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-[#3a3a3a] mr-12" />
-          <span className="absolute right-3 w-2.5 h-2.5 rounded-full bg-[#1c1c1c] ring-1 ring-[#2a2a2a]" />
-        </div>
-
-        <div
-          className="relative rounded-[37px] overflow-hidden bg-[#f0f0f0]"
-          style={{ height: 600 }}
-        >
-          {/* Status bar — leaves space for the Dynamic Island */}
-          <div className="h-11 bg-ink flex items-center justify-between px-6 text-white text-[12px] font-semibold">
-            <span className="tabular-nums">9:41</span>
-            <div className="flex items-center gap-1.5">
-              <svg width="16" height="10" viewBox="0 0 16 10" fill="currentColor" aria-hidden>
-                <rect x="0" y="6" width="3" height="4" rx="0.5" />
-                <rect x="4" y="4" width="3" height="6" rx="0.5" />
-                <rect x="8" y="2" width="3" height="8" rx="0.5" />
-                <rect x="12" y="0" width="3" height="10" rx="0.5" />
-              </svg>
-              <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden>
-                <path
-                  d="M7 9C7 9 1 5.4 1 3a3 3 0 0 1 6 0 3 3 0 0 1 6 0c0 2.4-6 6-6 6Z"
-                  fill="currentColor"
-                />
-              </svg>
-              <span className="inline-flex items-center">
-                <span className="w-5 h-2.5 rounded-[3px] border border-white/85 grid place-items-center p-[1px]">
-                  <span className="block h-full w-full rounded-[1.5px] bg-white" />
-                </span>
-                <span className="w-0.5 h-1.5 bg-white/85 rounded-r-[1px]" />
-              </span>
-            </div>
-          </div>
+        <div className="relative h-full w-full">
+          {/* No status bar — screen-only view per design reference */}
 
           {/* App header */}
           <div className="bg-white border-b border-ink/5 px-3 py-2 flex items-center gap-2">
@@ -489,7 +453,7 @@ export function PhoneMockup({
           {/* Chat area */}
           <div
             className="chat-bg overflow-hidden px-3 py-3 flex flex-col gap-2 relative"
-            style={{ height: 'calc(100% - 44px - 48px)' }}
+            style={{ height: 'calc(100% - 48px - 48px)' }}
           >
             <AnimatePresence initial={false}>
               {state.messages.map((msg) => (
@@ -599,34 +563,6 @@ export function PhoneMockup({
         </div>
       </div>
 
-      {/* Side buttons — iPhone 16/17 Pro Max layout */}
-      {/* Left: Action Button + volume up + volume down */}
-      <div
-        className="absolute top-[88px] -left-[3px] w-[3px] h-9 rounded-l-md"
-        style={{ background: 'linear-gradient(to right, #2b3145, #0A0E27)' }}
-        aria-hidden
-      />
-      <div
-        className="absolute top-[140px] -left-[3px] w-[3px] h-14 rounded-l-md"
-        style={{ background: 'linear-gradient(to right, #2b3145, #0A0E27)' }}
-        aria-hidden
-      />
-      <div
-        className="absolute top-[212px] -left-[3px] w-[3px] h-14 rounded-l-md"
-        style={{ background: 'linear-gradient(to right, #2b3145, #0A0E27)' }}
-        aria-hidden
-      />
-      {/* Right: side button + Camera Control */}
-      <div
-        className="absolute top-[120px] -right-[3px] w-[3px] h-20 rounded-r-md"
-        style={{ background: 'linear-gradient(to left, #2b3145, #0A0E27)' }}
-        aria-hidden
-      />
-      <div
-        className="absolute top-[228px] -right-[3px] w-[3px] h-9 rounded-r-md"
-        style={{ background: 'linear-gradient(to left, #2b3145, #0A0E27)' }}
-        aria-hidden
-      />
     </motion.div>
   )
 }

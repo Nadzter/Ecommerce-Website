@@ -1,7 +1,6 @@
 import dynamic from 'next/dynamic'
 import { Nav } from '@/components/Nav'
 import { Hero } from '@/components/Hero'
-import { StatsBar } from '@/components/StatsBar'
 import { Features } from '@/components/Features'
 import { HowItWorks } from '@/components/HowItWorks'
 import { CTA } from '@/components/CTA'
@@ -24,7 +23,6 @@ export default function Home() {
       <Nav />
       <main className="flex-1">
         <Hero />
-        <StatsBar />
         <LiveDemo />
         <Features />
         <HowItWorks />

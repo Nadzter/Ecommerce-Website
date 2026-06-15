@@ -100,12 +100,14 @@ export default function LiveDemo() {
                   {active && (
                     <motion.span
                       layoutId="demo-toggle-pill"
-                      className="absolute inset-0 rounded-full bg-brand -z-10"
+                      className="absolute inset-0 rounded-full bg-brand"
                       transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                     />
                   )}
-                  <span aria-hidden>{country.flag}</span>
-                  <span>{country.name}</span>
+                  <span aria-hidden className="relative z-10">
+                    {country.flag}
+                  </span>
+                  <span className="relative z-10">{country.name}</span>
                 </button>
               )
             })}

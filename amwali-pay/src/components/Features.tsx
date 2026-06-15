@@ -189,54 +189,71 @@ function ChatNativeVisual({ reduced }: { reduced: boolean | null }) {
     { id: 'msg',  Logo: MessengerLogo, angle: 150  },
     { id: 'snap', Logo: SnapchatLogo,  angle: -150 },
   ]
-  const radius = 108
+  const radius = 138 // more breathing room between the keypad and the logos
 
   return (
     <div className="relative w-full h-full overflow-hidden">
       <div className="absolute inset-0" style={GRID_BG_STYLE} aria-hidden />
 
       <svg
-        viewBox="-160 -160 320 320"
+        viewBox="-170 -160 340 320"
         className="absolute inset-0 w-full h-full"
         preserveAspectRatio="xMidYMid meet"
         aria-hidden
       >
-        {apps.map((app, idx) => {
+        {/* Solid connector lines from keypad center to each platform logo */}
+        {apps.map((app) => {
           const rad = (app.angle * Math.PI) / 180
-          const x = Math.cos(rad) * radius
-          const y = Math.sin(rad) * radius
+          // Start a bit out from the centre so the line doesn't sit under the keypad,
+          // and stop a bit short so it tucks under the logo.
+          const startX = Math.cos(rad) * 38
+          const startY = Math.sin(rad) * 38
+          const endX = Math.cos(rad) * (radius - 22)
+          const endY = Math.sin(rad) * (radius - 22)
           return (
-            <g key={app.id}>
-              <line
-                x1={0}
-                y1={0}
-                x2={x}
-                y2={y}
-                stroke="rgba(0,82,255,0.2)"
-                strokeWidth={1}
-                strokeDasharray="3 3"
-              />
-              {!reduced && (
-                <motion.circle
-                  r={3}
-                  fill="#0052FF"
-                  initial={{ cx: 0, cy: 0, opacity: 0 }}
-                  animate={{
-                    cx: [0, x, x],
-                    cy: [0, y, y],
-                    opacity: [0, 1, 0],
-                  }}
-                  transition={{
-                    duration: 2.4,
-                    repeat: Infinity,
-                    delay: idx * 0.35,
-                    ease: 'easeOut',
-                  }}
-                />
-              )}
-            </g>
+            <line
+              key={`l-${app.id}`}
+              x1={startX}
+              y1={startY}
+              x2={endX}
+              y2={endY}
+              stroke="rgba(0,82,255,0.22)"
+              strokeWidth={1.4}
+              strokeLinecap="round"
+            />
           )
         })}
+
+        {/* Traveling pulse dots — each line gets its own pulse, staggered. */}
+        {!reduced &&
+          apps.map((app, idx) => {
+            const rad = (app.angle * Math.PI) / 180
+            const startX = Math.cos(rad) * 38
+            const startY = Math.sin(rad) * 38
+            const endX = Math.cos(rad) * (radius - 22)
+            const endY = Math.sin(rad) * (radius - 22)
+            return (
+              <motion.circle
+                key={`p-${app.id}`}
+                r={4}
+                fill="#0052FF"
+                initial={{ cx: startX, cy: startY, opacity: 0 }}
+                animate={{
+                  cx: [startX, endX, endX],
+                  cy: [startY, endY, endY],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  duration: 1.8,
+                  repeat: Infinity,
+                  repeatDelay: 0.6,
+                  delay: idx * 0.32,
+                  ease: 'easeInOut',
+                }}
+                style={{ filter: 'drop-shadow(0 0 6px rgba(0,82,255,0.55))' }}
+              />
+            )
+          })}
       </svg>
 
       <div className="absolute inset-0 grid place-items-center pointer-events-none">
@@ -255,7 +272,7 @@ function ChatNativeVisual({ reduced }: { reduced: boolean | null }) {
               transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
             }}
           >
-            <app.Logo size={40} />
+            <app.Logo size={42} />
           </div>
         )
       })}
@@ -308,81 +325,95 @@ interface PayeeCard {
   bank: string
   account: string
   amount: string
-  flag: string
+  currency: 'AED' | 'USD' | 'LBP'
   rotate: number
   dx: number
   dy: number
-  z: number
+  highlighted?: boolean
 }
 
 function OneTapVisual({ reduced }: { reduced: boolean | null }) {
   const cards: PayeeCard[] = [
     {
-      name: 'Layla Haddad',
-      bank: 'Bank Audi',
-      account: '•••• 6394',
-      amount: '18,000,000 LBP',
-      flag: '🇱🇧',
-      rotate: -10,
-      dx: -54,
-      dy: -16,
-      z: 0,
+      name: 'Sara Al Mansoori',
+      bank: 'Emirates NBD',
+      account: '•••• 4821',
+      amount: 'AED 1,000.00',
+      currency: 'AED',
+      rotate: -4,
+      dx: -38,
+      dy: -78,
     },
     {
       name: 'Karim Saad',
       bank: 'BLOM Bank',
       account: '•••• 9120',
-      amount: '$200.00 USD',
-      flag: '🇱🇧',
-      rotate: -2,
-      dx: -16,
-      dy: -6,
-      z: 1,
+      amount: '$200.00',
+      currency: 'USD',
+      rotate: 2,
+      dx: 22,
+      dy: 0,
+      highlighted: true,
     },
     {
-      name: 'Sara Al Mansoori',
-      bank: 'Emirates NBD',
-      account: '•••• 4821',
-      amount: 'AED 1,000',
-      flag: '🇦🇪',
-      rotate: 8,
-      dx: 32,
-      dy: 10,
-      z: 2,
+      name: 'Layla Haddad',
+      bank: 'Bank Audi',
+      account: '•••• 6394',
+      amount: '18,000,000',
+      currency: 'LBP',
+      rotate: -2,
+      dx: -28,
+      dy: 78,
     },
   ]
   return (
     <div className="relative w-full h-full overflow-hidden">
       <div className="absolute inset-0" style={GRID_BG_STYLE} aria-hidden />
       <div className="absolute inset-0 grid place-items-center">
-        <div className="relative w-[280px] h-[200px]">
+        <div className="relative w-[260px] h-[260px]">
           {cards.map((c, idx) => {
-            const isFront = idx === cards.length - 1
+            const isHighlight = !!c.highlighted
             return (
               <motion.div
                 key={c.name}
-                initial={reduced ? false : { y: 18, opacity: 0 }}
+                initial={reduced ? false : { y: 14, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true, amount: 0.4 }}
                 transition={{ duration: 0.5, delay: idx * 0.12 }}
-                className="absolute left-1/2 top-1/2 w-[210px] rounded-2xl bg-white p-3 shadow-[0_18px_40px_-18px_rgba(10,14,39,0.32)]"
+                className="absolute left-1/2 top-1/2 w-[220px] rounded-2xl bg-white p-3 shadow-[0_18px_38px_-20px_rgba(10,14,39,0.3)]"
                 style={{
                   transform: `translate(calc(-50% + ${c.dx}px), calc(-50% + ${c.dy}px)) rotate(${c.rotate}deg)`,
-                  zIndex: c.z,
-                  border: isFront ? '2px solid #0052FF' : '1px solid rgba(10,14,39,0.08)',
+                  zIndex: isHighlight ? 5 : 1,
+                  border: isHighlight ? '2px solid #0052FF' : '1px solid rgba(10,14,39,0.10)',
                 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="text-[9px] text-ink/45 uppercase tracking-wider">
                     Saved payee
                   </div>
-                  <span className="text-base leading-none" aria-hidden>
-                    {c.flag}
+                  <span
+                    className="inline-flex items-center justify-center px-2 py-[2px] rounded-md text-[10px] font-bold tracking-wide"
+                    style={{
+                      backgroundColor:
+                        c.currency === 'AED'
+                          ? '#EBF2FF'
+                          : c.currency === 'USD'
+                            ? '#E6F4EA'
+                            : '#FFF1E6',
+                      color:
+                        c.currency === 'AED'
+                          ? '#0052FF'
+                          : c.currency === 'USD'
+                            ? '#1A7F37'
+                            : '#C2410C',
+                    }}
+                  >
+                    {c.currency}
                   </span>
                 </div>
-                <div className="mt-1 flex items-center gap-2">
+                <div className="mt-1.5 flex items-center gap-2.5">
                   <div
-                    className="w-7 h-7 rounded-full grid place-items-center text-white text-[10px] font-bold"
+                    className="w-8 h-8 rounded-full grid place-items-center text-white text-[10px] font-bold"
                     style={{ backgroundColor: '#0A0E27' }}
                   >
                     {c.name
@@ -391,11 +422,11 @@ function OneTapVisual({ reduced }: { reduced: boolean | null }) {
                       .slice(0, 2)
                       .join('')}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-[12px] font-semibold text-ink truncate">
                       {c.name}
                     </div>
-                    <div className="text-[10px] text-ink/50 truncate">{c.bank}</div>
+                    <div className="text-[10px] text-ink/55 truncate">{c.bank}</div>
                   </div>
                 </div>
                 <div className="mt-2.5 flex items-end justify-between">
@@ -409,10 +440,12 @@ function OneTapVisual({ reduced }: { reduced: boolean | null }) {
                     <div className="text-[9px] text-ink/45 uppercase tracking-wider">
                       Last sent
                     </div>
-                    <div className="text-[11px] font-semibold text-brand">{c.amount}</div>
+                    <div className="text-[12px] font-semibold text-brand">
+                      {c.amount}
+                    </div>
                   </div>
                 </div>
-                {isFront && (
+                {isHighlight && (
                   <div className="mt-2 -mx-3 -mb-3 px-3 py-1.5 rounded-b-2xl bg-brand text-white text-[10px] font-semibold flex items-center justify-between">
                     <span>One-tap to send</span>
                     <span>→</span>
