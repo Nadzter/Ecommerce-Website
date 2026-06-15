@@ -9,12 +9,12 @@ const GRID_BG_STYLE: React.CSSProperties = {
   backgroundSize: '22px 22px',
 }
 
+/* ---------- Mini keypad used in chat-native + white-label visuals ---------- */
+
 function MiniKeypad({
   scheme = 'brand',
-  highlightSend = true,
 }: {
   scheme?: 'brand' | 'green' | 'purple' | 'amber'
-  highlightSend?: boolean
 }) {
   const sendColor =
     scheme === 'brand'
@@ -28,11 +28,9 @@ function MiniKeypad({
   return (
     <div className="w-[148px] rounded-2xl bg-white shadow-[0_18px_40px_-12px_rgba(10,14,39,0.18)] border border-ink/10 overflow-hidden">
       <div className="flex items-center justify-between px-2 py-1.5 bg-white">
-        <span className="text-[8px] text-ink/40 inline-flex items-center gap-0.5">
-          <span className="inline-block w-3 h-2 rounded-[3px] border border-ink/30" />
-        </span>
+        <span className="inline-block w-3 h-2 rounded-[3px] border border-ink/30" />
         <span className="text-[14px] font-bold text-brand">$0</span>
-        <span className="text-[8px] text-ink/40 font-semibold">MXN ▾</span>
+        <span className="text-[8px] text-ink/40 font-semibold">USD ▾</span>
       </div>
       <div className="grid grid-cols-[18px_1fr] gap-0">
         <div
@@ -62,7 +60,7 @@ function MiniKeypad({
       <div className="px-2 pb-2">
         <div
           className="rounded-md py-1 text-center text-[10px] font-semibold text-white"
-          style={{ backgroundColor: highlightSend ? sendColor : '#0A0E27' }}
+          style={{ backgroundColor: sendColor }}
         >
           ● Send
         </div>
@@ -71,16 +69,127 @@ function MiniKeypad({
   )
 }
 
+/* ---------- Brand-accurate chat-platform logos ---------- */
+
+function WhatsAppLogo({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="grid place-items-center shadow-md"
+      style={{ width: size, height: size, background: '#25D366', borderRadius: size * 0.22 }}
+    >
+      <svg viewBox="0 0 32 32" width={size * 0.62} height={size * 0.62} fill="white" aria-hidden>
+        <path d="M16 5.3c-5.9 0-10.7 4.8-10.7 10.7 0 1.9.5 3.7 1.4 5.3l-1.4 5.4 5.5-1.4c1.6.9 3.3 1.3 5.2 1.3 5.9 0 10.7-4.8 10.7-10.7S21.9 5.3 16 5.3zm6.2 14.4c-.3.7-1.5 1.4-2.1 1.5-.5.1-1.2.1-1.9-.1-.4-.1-1-.3-1.8-.6-3.1-1.3-5.1-4.5-5.3-4.7-.2-.2-1.3-1.7-1.3-3.3 0-1.6.8-2.3 1.1-2.7.3-.3.6-.4.8-.4h.6c.2 0 .5-.1.7.5.3.7.9 2.3 1 2.5.1.2.1.4 0 .6-.1.2-.2.3-.3.5-.2.2-.4.4-.5.6-.2.2-.3.4-.1.7.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.1.5.1.6-.1.2-.2.7-.8.9-1.1.2-.3.3-.2.6-.1.3.1 1.7.8 2.1 1 .3.1.5.2.6.3.1.3.1.8-.2 1.6z" />
+      </svg>
+    </div>
+  )
+}
+
+function InstagramLogo({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="grid place-items-center shadow-md"
+      style={{
+        width: size,
+        height: size,
+        background:
+          'linear-gradient(135deg, #FEDA75 0%, #FA7E1E 25%, #D62976 55%, #962FBF 80%, #4F5BD5 100%)',
+        borderRadius: size * 0.22,
+      }}
+    >
+      <svg viewBox="0 0 32 32" width={size * 0.6} height={size * 0.6} fill="none" aria-hidden>
+        <rect x="7" y="7" width="18" height="18" rx="5" stroke="white" strokeWidth="2" />
+        <circle cx="16" cy="16" r="4" stroke="white" strokeWidth="2" />
+        <circle cx="22.2" cy="9.8" r="1.4" fill="white" />
+      </svg>
+    </div>
+  )
+}
+
+function TelegramLogo({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="grid place-items-center shadow-md"
+      style={{
+        width: size,
+        height: size,
+        background: 'linear-gradient(135deg, #37BBFE, #007DBB)',
+        borderRadius: '50%',
+      }}
+    >
+      <svg viewBox="0 0 32 32" width={size * 0.6} height={size * 0.6} fill="white" aria-hidden>
+        <path d="M24.5 8.6 L9 14.4c-1 .4-1 1 0 1.3l3.6 1.1 1.4 4.3c.2.5.4.5.8.2l2-1.7 4 2.9c.7.4 1.2.2 1.4-.7l2.5-11.8c.3-1-.4-1.6-1.5-1.1zM13.6 17.6L22 11.7l-7 7.8.5 3.1-1.9-4.9z" />
+      </svg>
+    </div>
+  )
+}
+
+function MessengerLogo({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="grid place-items-center shadow-md"
+      style={{
+        width: size,
+        height: size,
+        background:
+          'radial-gradient(circle at 30% 100%, #0099FF 0%, #A033FF 60%, #FF5285 100%)',
+        borderRadius: '50%',
+      }}
+    >
+      <svg viewBox="0 0 32 32" width={size * 0.65} height={size * 0.65} fill="white" aria-hidden>
+        <path d="M16 5C9.4 5 4 10 4 16.2c0 3.5 1.7 6.6 4.4 8.6V29l4-2.2c1.1.3 2.3.5 3.6.5 6.6 0 12-5 12-11.2S22.6 5 16 5zm1.1 14.9-3-3.2-5.7 3.2 6.3-6.6 3 3.2 5.7-3.2-6.3 6.6z" />
+      </svg>
+    </div>
+  )
+}
+
+function iMessageLogo({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="grid place-items-center shadow-md"
+      style={{
+        width: size,
+        height: size,
+        background: 'linear-gradient(135deg, #5BE584, #00B931)',
+        borderRadius: size * 0.22,
+      }}
+    >
+      <svg viewBox="0 0 32 32" width={size * 0.6} height={size * 0.6} fill="white" aria-hidden>
+        <path d="M16 7c-5.5 0-10 3.8-10 8.5 0 2.6 1.4 5 3.6 6.5-.5 1.6-1.6 2.8-1.6 2.8s2.8.4 5.3-1.5c.9.2 1.8.3 2.7.3 5.5 0 10-3.8 10-8.5S21.5 7 16 7z" />
+      </svg>
+    </div>
+  )
+}
+
+function SnapchatLogo({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="grid place-items-center shadow-md"
+      style={{
+        width: size,
+        height: size,
+        background: '#FFFC00',
+        borderRadius: size * 0.22,
+      }}
+    >
+      <svg viewBox="0 0 32 32" width={size * 0.65} height={size * 0.65} fill="white" stroke="white" strokeWidth="0.4" aria-hidden>
+        <path d="M16 6.5c2.7 0 4.7 1.4 5.6 3.3.7 1.6.3 3.7.1 5.3 0 .2 0 .3.2.4.4.2 1 .3 1.4.1.4-.1 1.1-.4 1.4.2.3.6-.4 1.1-1 1.4-.4.2-1.1.4-1.6.6-.5.2-.4.6-.3.9.2.5.5 1.1.9 1.5.5.4 1.5 1 2.7 1.1.4 0 .7.1.6.5-.1.6-1.6 1-2.4 1.1-.3 0-.6.1-.7.4-.1.3-.1.6-.2.9-.1.3-.3.6-.6.6-.4 0-.9-.3-1.7-.3-1.1 0-1.5.2-2.4.9-.8.7-1.8 1.2-3 1.2s-2.2-.5-3-1.2c-.9-.7-1.3-.9-2.4-.9-.8 0-1.3.3-1.7.3-.3 0-.5-.3-.6-.6-.1-.3-.1-.6-.2-.9-.1-.3-.4-.4-.7-.4-.8-.1-2.3-.5-2.4-1.1-.1-.4.2-.5.6-.5 1.2-.1 2.2-.7 2.7-1.1.4-.4.7-1 .9-1.5.1-.3.2-.7-.3-.9-.5-.2-1.2-.4-1.6-.6-.6-.3-1.3-.8-1-1.4.3-.6 1-.3 1.4-.2.4.2 1 .1 1.4-.1.2-.1.2-.2.2-.4-.2-1.6-.6-3.7.1-5.3.9-1.9 2.9-3.3 5.6-3.3z" />
+      </svg>
+    </div>
+  )
+}
+
+/* ---------- Chat-native visual: brand logos around keypad ---------- */
+
 function ChatNativeVisual({ reduced }: { reduced: boolean | null }) {
   const apps = [
-    { id: 'wa',     bg: '#25D366', label: 'W',  angle: -90 },
-    { id: 'ig',     bg: 'linear-gradient(135deg,#FEDA75,#FA7E1E,#D62976,#962FBF,#4F5BD5)', label: 'I',  angle: -30 },
-    { id: 'tg',     bg: '#26A5E4', label: 'T',  angle: 30 },
-    { id: 'msg',    bg: '#34C759', label: '✉',  angle: 90 },
-    { id: 'fbm',    bg: '#0084FF', label: 'M',  angle: 150 },
-    { id: 'sms',    bg: '#5856D6', label: 'S',  angle: -150 },
+    { id: 'wa',   Logo: WhatsAppLogo,  angle: -90  },
+    { id: 'ig',   Logo: InstagramLogo, angle: -30  },
+    { id: 'tg',   Logo: TelegramLogo,  angle: 30   },
+    { id: 'im',   Logo: iMessageLogo,  angle: 90   },
+    { id: 'msg',  Logo: MessengerLogo, angle: 150  },
+    { id: 'snap', Logo: SnapchatLogo,  angle: -150 },
   ]
-  const radius = 110
+  const radius = 108
 
   return (
     <div className="relative w-full h-full overflow-hidden">
@@ -103,7 +212,7 @@ function ChatNativeVisual({ reduced }: { reduced: boolean | null }) {
                 y1={0}
                 x2={x}
                 y2={y}
-                stroke="rgba(0,82,255,0.18)"
+                stroke="rgba(0,82,255,0.2)"
                 strokeWidth={1}
                 strokeDasharray="3 3"
               />
@@ -141,20 +250,20 @@ function ChatNativeVisual({ reduced }: { reduced: boolean | null }) {
         return (
           <div
             key={app.id}
-            className="absolute left-1/2 top-1/2 w-9 h-9 rounded-full text-white grid place-items-center text-[14px] font-bold shadow-lg"
+            className="absolute left-1/2 top-1/2"
             style={{
               transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-              background: app.bg,
             }}
-            aria-hidden
           >
-            {app.label}
+            <app.Logo size={40} />
           </div>
         )
       })}
     </div>
   )
 }
+
+/* ---------- White-label visual ---------- */
 
 function WhiteLabelVisual({ reduced }: { reduced: boolean | null }) {
   return (
@@ -192,135 +301,283 @@ function WhiteLabelVisual({ reduced }: { reduced: boolean | null }) {
   )
 }
 
+/* ---------- One-tap visual: 3 bank cards (USD, AED, LBP) ---------- */
+
+interface PayeeCard {
+  name: string
+  bank: string
+  account: string
+  amount: string
+  flag: string
+  rotate: number
+  dx: number
+  dy: number
+  z: number
+}
+
 function OneTapVisual({ reduced }: { reduced: boolean | null }) {
-  const cards = [
-    { bank: 'BLOM Bank', name: 'Layla Haddad', currency: 'USD', rotate: -6, dx: -28, z: 0 },
-    { bank: 'Audi Bank',  name: 'Karim Saad',    currency: 'USD', rotate: -2, dx: -10, z: 1 },
-    { bank: 'Bank Med',   name: 'Sara Mansoori', currency: 'AED', rotate: 4,  dx: 18,  z: 2 },
+  const cards: PayeeCard[] = [
+    {
+      name: 'Layla Haddad',
+      bank: 'Bank Audi',
+      account: '•••• 6394',
+      amount: '18,000,000 LBP',
+      flag: '🇱🇧',
+      rotate: -10,
+      dx: -54,
+      dy: -16,
+      z: 0,
+    },
+    {
+      name: 'Karim Saad',
+      bank: 'BLOM Bank',
+      account: '•••• 9120',
+      amount: '$200.00 USD',
+      flag: '🇱🇧',
+      rotate: -2,
+      dx: -16,
+      dy: -6,
+      z: 1,
+    },
+    {
+      name: 'Sara Al Mansoori',
+      bank: 'Emirates NBD',
+      account: '•••• 4821',
+      amount: 'AED 1,000',
+      flag: '🇦🇪',
+      rotate: 8,
+      dx: 32,
+      dy: 10,
+      z: 2,
+    },
   ]
   return (
     <div className="relative w-full h-full overflow-hidden">
       <div className="absolute inset-0" style={GRID_BG_STYLE} aria-hidden />
       <div className="absolute inset-0 grid place-items-center">
-        <div className="relative w-[280px] h-[180px]">
-          {cards.map((c, idx) => (
-            <motion.div
-              key={c.bank}
-              initial={reduced ? false : { y: 14, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              viewport={{ once: true, amount: 0.4 }}
-              transition={{ duration: 0.5, delay: idx * 0.12 }}
-              className="absolute left-1/2 top-1/2 w-[210px] rounded-2xl bg-white border border-ink/10 shadow-[0_18px_40px_-18px_rgba(10,14,39,0.25)] p-3"
-              style={{
-                transform: `translate(calc(-50% + ${c.dx}px), -50%) rotate(${c.rotate}deg)`,
-                zIndex: c.z,
-                outline: idx === cards.length - 1 ? '2px solid #0052FF' : 'none',
-                outlineOffset: idx === cards.length - 1 ? -2 : 0,
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-[9px] text-ink/45 uppercase tracking-wider">
-                  Currency
-                </div>
-                {idx === cards.length - 1 && (
-                  <span className="w-3.5 h-3.5 rounded-full bg-brand grid place-items-center text-white text-[8px]">
-                    ✓
+        <div className="relative w-[280px] h-[200px]">
+          {cards.map((c, idx) => {
+            const isFront = idx === cards.length - 1
+            return (
+              <motion.div
+                key={c.name}
+                initial={reduced ? false : { y: 18, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true, amount: 0.4 }}
+                transition={{ duration: 0.5, delay: idx * 0.12 }}
+                className="absolute left-1/2 top-1/2 w-[210px] rounded-2xl bg-white p-3 shadow-[0_18px_40px_-18px_rgba(10,14,39,0.32)]"
+                style={{
+                  transform: `translate(calc(-50% + ${c.dx}px), calc(-50% + ${c.dy}px)) rotate(${c.rotate}deg)`,
+                  zIndex: c.z,
+                  border: isFront ? '2px solid #0052FF' : '1px solid rgba(10,14,39,0.08)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-[9px] text-ink/45 uppercase tracking-wider">
+                    Saved payee
+                  </div>
+                  <span className="text-base leading-none" aria-hidden>
+                    {c.flag}
                   </span>
+                </div>
+                <div className="mt-1 flex items-center gap-2">
+                  <div
+                    className="w-7 h-7 rounded-full grid place-items-center text-white text-[10px] font-bold"
+                    style={{ backgroundColor: '#0A0E27' }}
+                  >
+                    {c.name
+                      .split(' ')
+                      .map((p) => p[0])
+                      .slice(0, 2)
+                      .join('')}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[12px] font-semibold text-ink truncate">
+                      {c.name}
+                    </div>
+                    <div className="text-[10px] text-ink/50 truncate">{c.bank}</div>
+                  </div>
+                </div>
+                <div className="mt-2.5 flex items-end justify-between">
+                  <div>
+                    <div className="text-[9px] text-ink/45 uppercase tracking-wider">
+                      Account
+                    </div>
+                    <div className="text-[11px] font-mono text-ink/85">{c.account}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[9px] text-ink/45 uppercase tracking-wider">
+                      Last sent
+                    </div>
+                    <div className="text-[11px] font-semibold text-brand">{c.amount}</div>
+                  </div>
+                </div>
+                {isFront && (
+                  <div className="mt-2 -mx-3 -mb-3 px-3 py-1.5 rounded-b-2xl bg-brand text-white text-[10px] font-semibold flex items-center justify-between">
+                    <span>One-tap to send</span>
+                    <span>→</span>
+                  </div>
                 )}
-              </div>
-              <div className="text-[12px] font-semibold text-ink">{c.currency}</div>
-              <div className="mt-2 text-[9px] text-ink/45 uppercase tracking-wider">Bank</div>
-              <div className="text-[12px] font-semibold text-ink">{c.bank}</div>
-              <div className="mt-2 text-[9px] text-ink/45 uppercase tracking-wider">Beneficiary</div>
-              <div className="text-[12px] font-semibold text-ink">{c.name}</div>
-            </motion.div>
-          ))}
+              </motion.div>
+            )
+          })}
         </div>
       </div>
     </div>
   )
 }
 
+/* ---------- NFC & QR visual: phones move apart and together ---------- */
+
 function NfcQrVisual({ reduced }: { reduced: boolean | null }) {
+  // Cycle (4.8s): close (NFC linked) → apart → close (QR shown) → apart
+  const closeDuration = 4.8
   return (
     <div className="relative w-full h-full overflow-hidden">
       <div className="absolute inset-0" style={GRID_BG_STYLE} aria-hidden />
       <div className="absolute inset-0 grid place-items-center">
-        <div className="relative w-[260px] h-[200px]">
+        <div className="relative w-[280px] h-[200px]">
           {/* Left phone */}
-          <div
-            className="absolute left-[8%] top-1/2 w-[90px] h-[150px] rounded-[18px] bg-ink shadow-2xl"
-            style={{ transform: 'translateY(-50%) rotate(-14deg)' }}
-            aria-hidden
+          <motion.div
+            className="absolute top-1/2 left-1/2"
+            style={{ width: 90, height: 150, marginTop: -75, marginLeft: -90 }}
+            animate={
+              reduced
+                ? {}
+                : {
+                    x: [-32, 0, -32, 0, -32],
+                    rotate: [-14, -6, -14, -6, -14],
+                  }
+            }
+            transition={{
+              duration: closeDuration,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
           >
-            <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-8 h-2.5 rounded-full bg-black" />
-            <div className="absolute inset-1.5 mt-4 rounded-[14px] bg-gradient-to-br from-brand to-brand-deep grid place-items-center">
-              <span className="text-white text-2xl">●</span>
-            </div>
-          </div>
-          {/* Right phone */}
-          <div
-            className="absolute right-[8%] top-1/2 w-[90px] h-[150px] rounded-[18px] bg-white border border-ink/10 shadow-2xl"
-            style={{ transform: 'translateY(-50%) rotate(14deg)' }}
-            aria-hidden
-          >
-            <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-8 h-2.5 rounded-full bg-ink/85" />
-            <div className="absolute inset-1.5 mt-4 rounded-[14px] bg-brand-pale grid place-items-center">
-              <div className="grid grid-cols-3 gap-[3px]">
-                {Array.from({ length: 9 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className={`w-2 h-2 ${i % 2 === 0 ? 'bg-ink' : 'bg-transparent'} rounded-[1px]`}
-                  />
-                ))}
+            <div className="w-full h-full rounded-[18px] bg-ink shadow-2xl relative">
+              <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-8 h-2.5 rounded-full bg-black" />
+              <div className="absolute inset-1.5 mt-4 rounded-[14px] bg-gradient-to-br from-brand to-brand-deep grid place-items-center">
+                <span className="text-white text-2xl font-bold">$</span>
               </div>
             </div>
-          </div>
-          {/* Floating dots between phones */}
-          {!reduced && (
-            <div className="absolute top-[20%] left-1/2 -translate-x-1/2 flex gap-1.5" aria-hidden>
-              {[0, 1, 2].map((i) => (
-                <motion.span
-                  key={i}
-                  className="w-2 h-2 rounded-full bg-brand"
-                  animate={{ opacity: [0.2, 1, 0.2], y: [0, -4, 0] }}
-                  transition={{
-                    duration: 1.4,
-                    repeat: Infinity,
-                    delay: i * 0.18,
-                    ease: 'easeInOut',
-                  }}
-                />
-              ))}
-            </div>
-          )}
-          {/* NFC arc */}
-          <svg
-            className="absolute inset-0 w-full h-full"
-            viewBox="0 0 260 200"
-            preserveAspectRatio="xMidYMid meet"
-            aria-hidden
+          </motion.div>
+
+          {/* Right phone */}
+          <motion.div
+            className="absolute top-1/2 left-1/2"
+            style={{ width: 90, height: 150, marginTop: -75 }}
+            animate={
+              reduced
+                ? {}
+                : {
+                    x: [32, 0, 32, 0, 32],
+                    rotate: [14, 6, 14, 6, 14],
+                  }
+            }
+            transition={{
+              duration: closeDuration,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
           >
-            <path
-              d="M120 110 Q130 95 140 110"
-              stroke="rgba(0,82,255,0.25)"
-              strokeWidth="1.4"
-              fill="none"
-              strokeDasharray="3 3"
-            />
-            <path
-              d="M115 118 Q130 90 145 118"
-              stroke="rgba(0,82,255,0.18)"
-              strokeWidth="1.4"
-              fill="none"
-              strokeDasharray="3 3"
-            />
-          </svg>
+            <div className="w-full h-full rounded-[18px] bg-white border border-ink/10 shadow-2xl relative">
+              <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-8 h-2.5 rounded-full bg-ink/85" />
+              <div className="absolute inset-1.5 mt-4 rounded-[14px] bg-brand-pale grid place-items-center p-2">
+                {/* QR-ish dot grid */}
+                <div className="grid grid-cols-4 gap-[2px]">
+                  {[
+                    1, 0, 1, 0,
+                    0, 1, 1, 1,
+                    1, 1, 0, 1,
+                    0, 1, 1, 0,
+                  ].map((v, i) => (
+                    <span
+                      key={i}
+                      className={`w-1.5 h-1.5 ${v ? 'bg-ink' : 'bg-transparent'} rounded-[1px]`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* NFC arcs — visible when phones are close */}
+          {!reduced && (
+            <motion.svg
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              viewBox="0 0 280 200"
+              preserveAspectRatio="xMidYMid meet"
+              animate={{ opacity: [0, 1, 0, 0, 0] }}
+              transition={{
+                duration: closeDuration,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                times: [0, 0.18, 0.45, 0.55, 1],
+              }}
+            >
+              <path
+                d="M132 100 Q140 86 148 100"
+                stroke="#0052FF"
+                strokeWidth="1.6"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <path
+                d="M126 108 Q140 78 154 108"
+                stroke="rgba(0,82,255,0.6)"
+                strokeWidth="1.4"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <path
+                d="M120 116 Q140 70 160 116"
+                stroke="rgba(0,82,255,0.3)"
+                strokeWidth="1.4"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </motion.svg>
+          )}
+
+          {/* QR badge — visible during the second close phase */}
+          {!reduced && (
+            <motion.div
+              className="absolute top-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-white border border-ink/10 px-2.5 py-1 text-[10px] font-semibold text-ink shadow-md"
+              animate={{ opacity: [0, 0, 0, 1, 0] }}
+              transition={{
+                duration: closeDuration,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                times: [0, 0.55, 0.65, 0.85, 1],
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden>
+                <rect x="0" y="0" width="3" height="3" />
+                <rect x="7" y="0" width="3" height="3" />
+                <rect x="0" y="7" width="3" height="3" />
+                <rect x="4" y="4" width="2" height="2" />
+              </svg>
+              QR linked
+            </motion.div>
+          )}
+
+          {/* Mode pills at bottom */}
+          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-2">
+            <span className="rounded-full bg-white border border-ink/10 px-2.5 py-1 text-[10px] font-semibold text-brand shadow-sm">
+              📡 NFC tap
+            </span>
+            <span className="rounded-full bg-white border border-ink/10 px-2.5 py-1 text-[10px] font-semibold text-ink shadow-sm">
+              ⊞ QR scan
+            </span>
+          </div>
         </div>
       </div>
     </div>
   )
 }
+
+/* ---------- Security visual ---------- */
 
 function SecurityVisual({ reduced }: { reduced: boolean | null }) {
   return (
@@ -329,7 +586,6 @@ function SecurityVisual({ reduced }: { reduced: boolean | null }) {
       <div className="absolute inset-0 grid place-items-center">
         <div className="relative">
           <div className="w-[160px] h-[160px] rounded-3xl bg-white border border-ink/10 shadow-[0_24px_60px_-20px_rgba(10,14,39,0.25)] grid place-items-center relative overflow-hidden">
-            {/* Face ID brackets */}
             <svg viewBox="0 0 64 64" className="w-20 h-20" aria-hidden>
               <rect x="6" y="6" width="14" height="3" rx="1.5" fill="#0052FF" />
               <rect x="6" y="6" width="3" height="14" rx="1.5" fill="#0052FF" />
@@ -358,18 +614,9 @@ function SecurityVisual({ reduced }: { reduced: boolean | null }) {
               />
             )}
           </div>
-          {/* Lock badge */}
           <div className="absolute -bottom-4 -right-4 w-14 h-14 rounded-2xl bg-brand text-white grid place-items-center shadow-xl shadow-brand/30">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <rect
-                x="5"
-                y="11"
-                width="14"
-                height="9"
-                rx="2"
-                stroke="white"
-                strokeWidth="2"
-              />
+              <rect x="5" y="11" width="14" height="9" rx="2" stroke="white" strokeWidth="2" />
               <path
                 d="M8 11V8a4 4 0 0 1 8 0v3"
                 stroke="white"
@@ -385,65 +632,139 @@ function SecurityVisual({ reduced }: { reduced: boolean | null }) {
   )
 }
 
-function LocalRailsVisual({ reduced }: { reduced: boolean | null }) {
-  const rails = [
-    { name: 'BDL Instant',   flag: '🇱🇧' },
-    { name: 'UAEFTS',        flag: '🇦🇪' },
-    { name: 'SEPA Instant',  flag: '🇪🇺' },
-    { name: 'Pix',           flag: '🇧🇷' },
-    { name: 'UPI',           flag: '🇮🇳' },
-    { name: 'Faster Payments', flag: '🇬🇧' },
-  ]
+/* ---------- Local rails visual: scrolling logo rows + stationary center ---------- */
+
+interface RailBadge {
+  short: string
+  color: string
+}
+
+const RAILS_TOP: RailBadge[] = [
+  { short: 'SEPA',  color: '#003399' },
+  { short: 'Pix',   color: '#32BCAD' },
+  { short: 'UPI',   color: '#F4801E' },
+  { short: 'SPEI',  color: '#9C0F2F' },
+  { short: 'FPS',   color: '#1D3557' },
+  { short: 'Bizum', color: '#04CDDD' },
+  { short: 'Blik',  color: '#1A1A1A' },
+  { short: 'ACH',   color: '#005EB8' },
+]
+
+const RAILS_MID: RailBadge[] = [
+  { short: 'UAEFTS',  color: '#009B77' },
+  { short: 'BDL',     color: '#E85C0D' },
+  { short: 'AECB',    color: '#0052FF' },
+  { short: 'eDirham', color: '#475569' },
+  { short: 'SWIFT',   color: '#0F2C4F' },
+  { short: 'Wero',    color: '#7C3AED' },
+  { short: 'PayID',   color: '#0F766E' },
+  { short: 'Interac', color: '#FFB81C' },
+]
+
+const RAILS_BOTTOM: RailBadge[] = [
+  { short: 'Pix',     color: '#32BCAD' },
+  { short: 'FPS',     color: '#1D3557' },
+  { short: 'UPI',     color: '#F4801E' },
+  { short: 'Blik',    color: '#1A1A1A' },
+  { short: 'SEPA',    color: '#003399' },
+  { short: 'Bizum',   color: '#04CDDD' },
+  { short: 'UAEFTS',  color: '#009B77' },
+  { short: 'BDL',     color: '#E85C0D' },
+]
+
+function RailBadgeCard({ badge }: { badge: RailBadge }) {
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      <div className="absolute inset-0" style={GRID_BG_STYLE} aria-hidden />
-      <div className="absolute inset-0 p-6 grid grid-cols-2 gap-2 items-center justify-items-center content-center">
-        {rails.map((r, i) => (
-          <motion.div
-            key={r.name}
-            initial={reduced ? false : { opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.35, delay: i * 0.08 }}
-            className="inline-flex items-center gap-2 rounded-full bg-white border border-ink/10 shadow-sm px-3 py-2 text-[12px] font-semibold text-ink"
-          >
-            <span className="text-base leading-none" aria-hidden>
-              {r.flag}
-            </span>
-            <span>{r.name}</span>
-            <motion.span
-              initial={reduced ? false : { scale: 0 }}
-              whileInView={{ scale: 1 }}
-              viewport={{ once: true, amount: 0.4 }}
-              transition={{
-                duration: 0.3,
-                delay: i * 0.08 + 0.25,
-                type: 'spring',
-                stiffness: 320,
-                damping: 18,
-              }}
-              className="w-4 h-4 rounded-full bg-brand grid place-items-center text-white text-[9px]"
-            >
-              ✓
-            </motion.span>
-          </motion.div>
-        ))}
-      </div>
-      {!reduced && (
-        <motion.div
-          className="absolute bottom-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-brand text-white px-3 py-1 text-[11px] font-semibold shadow-md"
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.35, delay: 0.7 }}
-        >
-          <span aria-hidden>⚡</span>
-          Settles in &lt; 60s
-        </motion.div>
-      )}
+    <div
+      className="flex-shrink-0 w-[68px] h-[44px] rounded-xl bg-white border border-ink/10 shadow-sm grid place-items-center"
+      aria-hidden
+    >
+      <span
+        className="text-[11px] font-bold tracking-tight"
+        style={{ color: badge.color }}
+      >
+        {badge.short}
+      </span>
     </div>
   )
 }
+
+function RailRow({
+  items,
+  direction,
+  duration,
+  reduced,
+}: {
+  items: RailBadge[]
+  direction: 'left' | 'right'
+  duration: number
+  reduced: boolean | null
+}) {
+  const doubled = [...items, ...items]
+  // Each badge is 68px + 10px gap = 78px.
+  const distance = items.length * 78
+  return (
+    <div className="relative overflow-hidden">
+      <motion.div
+        className="flex gap-2.5 w-max"
+        animate={
+          reduced
+            ? {}
+            : direction === 'left'
+              ? { x: [0, -distance] }
+              : { x: [-distance, 0] }
+        }
+        transition={{
+          duration,
+          repeat: Infinity,
+          ease: 'linear',
+        }}
+      >
+        {doubled.map((b, i) => (
+          <RailBadgeCard key={`${b.short}-${i}`} badge={b} />
+        ))}
+      </motion.div>
+    </div>
+  )
+}
+
+function LocalRailsVisual({ reduced }: { reduced: boolean | null }) {
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      <div className="absolute inset-0" style={GRID_BG_STYLE} aria-hidden />
+
+      {/* Side fade gradients */}
+      <div
+        className="absolute inset-y-0 left-0 w-12 z-10 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, white, transparent)' }}
+        aria-hidden
+      />
+      <div
+        className="absolute inset-y-0 right-0 w-12 z-10 pointer-events-none"
+        style={{ background: 'linear-gradient(to left, white, transparent)' }}
+        aria-hidden
+      />
+
+      <div className="absolute inset-0 flex flex-col justify-center gap-3 px-4">
+        <RailRow items={RAILS_TOP}    direction="left"  duration={28} reduced={reduced} />
+        <RailRow items={RAILS_MID}    direction="right" duration={32} reduced={reduced} />
+        <RailRow items={RAILS_BOTTOM} direction="left"  duration={26} reduced={reduced} />
+      </div>
+
+      {/* Stationary center brand mark */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+        <div className="w-[72px] h-[72px] rounded-2xl bg-brand grid place-items-center shadow-2xl shadow-brand/40 border-[3px] border-white">
+          <span className="text-white text-[11px] font-bold tracking-tight leading-none text-center">
+            amwali
+            <br />
+            pay
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ---------- Section composition ---------- */
 
 const VISUALS = [
   ChatNativeVisual,

@@ -3,7 +3,6 @@ import { Nav } from '@/components/Nav'
 import { Hero } from '@/components/Hero'
 import { StatsBar } from '@/components/StatsBar'
 import { Features } from '@/components/Features'
-import { Rails } from '@/components/Rails'
 import { HowItWorks } from '@/components/HowItWorks'
 import { CTA } from '@/components/CTA'
 import { ContactForm } from '@/components/ContactForm'
@@ -28,7 +27,6 @@ export default function Home() {
         <StatsBar />
         <LiveDemo />
         <Features />
-        <Rails />
         <HowItWorks />
         <CTA>
           <ContactForm />

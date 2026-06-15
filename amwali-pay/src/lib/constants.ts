@@ -131,7 +131,7 @@ export const FEATURES: Feature[] = [
   },
   {
     icon: '👆',
-    titleEn: 'One-tap after first use',
+    titleEn: 'One-tap claim for recipients',
     body:
       'Recipients enter details once. Every subsequent payment is a single tap. Fewer errors, fewer support calls, faster settlement.',
   },
